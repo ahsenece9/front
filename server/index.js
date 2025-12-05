@@ -10,10 +10,19 @@ import { Server } from "socket.io";
 dotenv.config();
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, { cors: { origin: "*" } });
+const io = new Server(httpServer, { 
+  cors: { 
+    origin: ["https://uniplan-frontend.onrender.com", "http://localhost:3000"],
+    credentials: true 
+  } 
+});
 const prisma = new PrismaClient();
 
-app.use(cors());
+// CORS ayarını güncelle
+app.use(cors({
+  origin: ["https://uniplan-frontend.onrender.com", "http://localhost:3000"],
+  credentials: true
+}));
 app.use(express.json());
 
 /* ---------- TEST ROUTE ---------- */
