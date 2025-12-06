@@ -2,6 +2,9 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const AuthContext = createContext();
 
+// API URL - Production'da environment variable, local'de boş (proxy kullanır)
+const API_URL = process.env.REACT_APP_API_URL || '';
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -9,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            fetch('/api/auth/me', {
+            fetch(`${API_URL}/api/auth/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => {
@@ -19,7 +22,8 @@ export const AuthProvider = ({ children }) => {
                 .then(data => {
                     setUser(data.user);
                 })
-                .catch(() => {
+                .catch((err) => {
+                    console.error('Auth error:', err);
                     localStorage.removeItem('token');
                     setUser(null);
                 })
@@ -31,7 +35,7 @@ export const AuthProvider = ({ children }) => {
 
     const signUp = async (email, password, metaData) => {
         try {
-            const res = await fetch('/api/auth/register', {
+            const res = await fetch(`${API_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, full_name: metaData.full_name })
@@ -44,7 +48,7 @@ export const AuthProvider = ({ children }) => {
                     data = await res.json().catch(() => null);
                 }
             } catch (e) {
-                // If parsing fails we still fall through to friendly fallback
+                console.error('Parse error:', e);
                 data = null;
             }
 
@@ -52,15 +56,22 @@ export const AuthProvider = ({ children }) => {
                 const msg = (data && (data.error || data.message)) || res.statusText || 'Registration failed';
                 throw new Error(msg);
             }
+            
+            if (data && data.token) {
+                localStorage.setItem('token', data.token);
+                setUser(data.user);
+            }
+            
             return { data };
         } catch (error) {
+            console.error('SignUp error:', error);
             return { error };
         }
     };
 
     const signIn = async (email, password) => {
         try {
-            const res = await fetch('/api/auth/login', {
+            const res = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -73,6 +84,7 @@ export const AuthProvider = ({ children }) => {
                     data = await res.json().catch(() => null);
                 }
             } catch (e) {
+                console.error('Parse error:', e);
                 data = null;
             }
 
@@ -81,10 +93,16 @@ export const AuthProvider = ({ children }) => {
                 throw new Error(msg);
             }
 
-            localStorage.setItem('token', data.token);
-            setUser(data.user);
+            if (data && data.token) {
+                localStorage.setItem('token', data.token);
+                setUser(data.user);
+            } else {
+                throw new Error('No token received from server');
+            }
+            
             return { data };
         } catch (error) {
+            console.error('SignIn error:', error);
             return { error };
         }
     };
