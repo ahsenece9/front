@@ -51,7 +51,7 @@ app.get("/", (req, res) => {
 
 /* ---------- REGISTER ---------- */
 app.post("/api/auth/register", async (req, res) => {
-    const { email, password, name, full_name } = req.body; // ✅ "name" ekledik
+    const { email, password, name, full_name } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({ error: "Email and password required" });
@@ -64,7 +64,7 @@ app.post("/api/auth/register", async (req, res) => {
             data: { 
                 email, 
                 password: hashed,
-                name: name || full_name || email.split('@')[0] // ✅ Her ikisini de kabul et
+                name: name || full_name || email.split('@')[0]
             }
         });
         
@@ -77,7 +77,7 @@ app.post("/api/auth/register", async (req, res) => {
                 id: user.id,
                 email: user.email,
                 full_name: user.name,
-                name: user.name // ✅ İkisini de döndür
+                name: user.name
             }
         });
     } catch (err) {
@@ -128,16 +128,71 @@ app.get("/api/auth/me", authenticateToken, async (req, res) => {
     });
 });
 
+/* ---------- GET MESSAGES ---------- */
+app.get("/api/messages", authenticateToken, async (req, res) => {
+    try {
+        const messages = await prisma.message.findMany({
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'asc'
+            },
+            take: 100 // Last 100 messages
+        });
+
+        const formatted = messages.map(msg => ({
+            id: msg.id,
+            content: msg.text,
+            sender_id: msg.userId,
+            sender_name: msg.user?.name || msg.user?.email || 'Unknown',
+            created_at: msg.createdAt
+        }));
+
+        res.json(formatted);
+    } catch (err) {
+        console.error('Get messages error:', err);
+        res.status(500).json({ error: "Failed to fetch messages" });
+    }
+});
+
 /* ---------- SOCKET.IO ---------- */
 io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    socket.on("sendMessage", async (data) => {
+    socket.on("send_message", async (data) => {
         try {
             const message = await prisma.message.create({
-                data: { text: data.text, userId: data.userId }
+                data: { 
+                    text: data.content,
+                    userId: data.sender_id
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            email: true,
+                            name: true
+                        }
+                    }
+                }
             });
-            io.emit("newMessage", message);
+
+            const formatted = {
+                id: message.id,
+                content: message.text,
+                sender_id: message.userId,
+                sender_name: message.user?.name || message.user?.email || 'Unknown',
+                created_at: message.createdAt
+            };
+
+            io.emit("receive_message", formatted);
         } catch (err) {
             console.error('Message error:', err);
         }
