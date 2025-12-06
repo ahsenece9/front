@@ -28,7 +28,7 @@ app.use(express.json());
 /* ---------- AUTH MIDDLEWARE ---------- */
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.status(401).json({ error: 'No token provided' });
 
@@ -132,42 +132,43 @@ app.get("/api/auth/me", authenticateToken, async (req, res) => {
 app.get("/api/messages", authenticateToken, async (req, res) => {
     try {
         const messages = await prisma.message.findMany({
+            orderBy: { createdAt: 'asc' },
+            take: 100, // Son 100 mesaj
             include: {
                 user: {
                     select: {
                         id: true,
-                        email: true,
-                        name: true
+                        name: true,
+                        email: true
                     }
                 }
-            },
-            orderBy: {
-                createdAt: 'asc'
-            },
-            take: 100 // Last 100 messages
+            }
         });
 
         const formatted = messages.map(msg => ({
             id: msg.id,
             content: msg.text,
             sender_id: msg.userId,
-            sender_name: msg.user?.name || msg.user?.email || 'Unknown',
+            sender_name: msg.user.name || msg.user.email,
             created_at: msg.createdAt
         }));
 
         res.json(formatted);
     } catch (err) {
-        console.error('Get messages error:', err);
+        console.error('Messages fetch error:', err);
         res.status(500).json({ error: "Failed to fetch messages" });
     }
 });
 
 /* ---------- SOCKET.IO ---------- */
 io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+    console.log("✅ User connected:", socket.id);
 
+    // Frontend'den gelen event: "send_message"
     socket.on("send_message", async (data) => {
         try {
+            console.log("📨 Message received:", data);
+
             const message = await prisma.message.create({
                 data: { 
                     text: data.content,
@@ -177,31 +178,34 @@ io.on("connection", (socket) => {
                     user: {
                         select: {
                             id: true,
-                            email: true,
-                            name: true
+                            name: true,
+                            email: true
                         }
                     }
                 }
             });
 
+            // Tüm kullanıcılara gönder (broadcast)
             const formatted = {
                 id: message.id,
                 content: message.text,
                 sender_id: message.userId,
-                sender_name: message.user?.name || message.user?.email || 'Unknown',
+                sender_name: message.user.name || message.user.email,
                 created_at: message.createdAt
             };
 
             io.emit("receive_message", formatted);
+            console.log("✅ Message broadcasted:", formatted);
         } catch (err) {
-            console.error('Message error:', err);
+            console.error('❌ Message error:', err);
+            socket.emit("error", { message: "Failed to send message" });
         }
     });
 
     socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
+        console.log("❌ User disconnected:", socket.id);
     });
 });
 
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+httpServer.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
