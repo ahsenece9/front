@@ -11,9 +11,11 @@ import {
     Zap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // ✅ Eklendi
 
 const DashboardHome = () => {
     const navigate = useNavigate();
+    const { user } = useAuth(); // ✅ Kullanıcı bilgisini al
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -82,6 +84,9 @@ const DashboardHome = () => {
         { title: 'Takvimi Aç', icon: <Calendar size={20} />, action: () => navigate('/dashboard/calendar') },
     ];
 
+    // ✅ Kullanıcı adını al - full_name veya email'den önce
+    const displayName = user?.full_name || user?.name || user?.email?.split('@')[0] || 'Kullanıcı';
+
     return (
         <motion.div
             className="dashboard-home"
@@ -92,7 +97,7 @@ const DashboardHome = () => {
             {/* Welcome Section */}
             <motion.div className="welcome-section" variants={itemVariants}>
                 <div className="welcome-text">
-                    <h1>Hoşgeldin, Ahmet! 👋</h1>
+                    <h1>Hoşgeldin, {displayName}! 👋</h1>
                     <p>Bugün harika işler başarmaya hazır mısın?</p>
                 </div>
                 <div className="date-display">

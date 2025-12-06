@@ -2,15 +2,26 @@ import React, { useState } from 'react';
 import { MessageCircle, Bell, ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // ✅ Eklendi
 
 const Topbar = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const navigate = useNavigate();
+    const { user, signOut } = useAuth(); // ✅ Kullanıcı bilgisi al
 
-    const handleLogout = () => {
-        // In a real app, you would clear auth tokens here
+    const handleLogout = async () => {
+        await signOut(); // ✅ AuthContext'teki signOut fonksiyonunu kullan
         navigate('/');
     };
+
+    // ✅ Kullanıcı adını ve baş harflerini al
+    const displayName = user?.full_name || user?.name || user?.email?.split('@')[0] || 'Kullanıcı';
+    const initials = displayName
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
 
     return (
         <div className="topbar">
@@ -32,9 +43,9 @@ const Topbar = () => {
                         className="user-profile"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     >
-                        <div className="avatar">AH</div>
+                        <div className="avatar">{initials}</div>
                         <div className="user-info">
-                            <span className="user-name">Ahmet Hakan</span>
+                            <span className="user-name">{displayName}</span>
                             <span className="user-role">Öğrenci</span>
                         </div>
                         <ChevronDown size={16} style={{ transition: 'transform 0.2s', transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
