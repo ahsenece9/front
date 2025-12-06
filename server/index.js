@@ -18,12 +18,31 @@ const io = new Server(httpServer, {
 });
 const prisma = new PrismaClient();
 
-// CORS ayarını güncelle
+// CORS
 app.use(cors({
   origin: ["https://uniplan-frontend.onrender.com", "http://localhost:3000"],
   credentials: true
 }));
 app.use(express.json());
+
+/* ---------- AUTH MIDDLEWARE ---------- */
+const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (!user) return res.status(401).json({ error: 'User not found' });
+    
+    req.user = user;
+    next();
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+};
 
 /* ---------- TEST ROUTE ---------- */
 app.get("/", (req, res) => {
@@ -31,45 +50,100 @@ app.get("/", (req, res) => {
 });
 
 /* ---------- REGISTER ---------- */
-app.post("/register", async (req, res) => {
-    const { email, password } = req.body;
+app.post("/api/auth/register", async (req, res) => {
+    const { email, password, full_name } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: "Email and password required" });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
 
     try {
         const user = await prisma.user.create({
-            data: { email, password: hashed }
+            data: { 
+                email, 
+                password: hashed,
+                name: full_name || email.split('@')[0]
+            }
         });
-        res.json({ message: "Registered", user });
+        
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
+        
+        res.json({ 
+            message: "Registered successfully",
+            token,
+            user: {
+                id: user.id,
+                email: user.email,
+                full_name: user.name
+            }
+        });
     } catch (err) {
+        console.error('Registration error:', err);
         res.status(400).json({ error: "Email already used" });
     }
 });
 
 /* ---------- LOGIN ---------- */
-app.post("/login", async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    if (!email || !password) {
+        return res.status(400).json({ error: "Email and password required" });
+    }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ error: "Invalid credentials" });
+    try {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return res.status(400).json({ error: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
-    res.json({ token, user });
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) return res.status(400).json({ error: "Invalid credentials" });
+
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
+        
+        res.json({ 
+            token, 
+            user: {
+                id: user.id,
+                email: user.email,
+                full_name: user.name
+            }
+        });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ error: "Login failed" });
+    }
+});
+
+/* ---------- GET CURRENT USER ---------- */
+app.get("/api/auth/me", authenticateToken, async (req, res) => {
+    res.json({ 
+        user: {
+            id: req.user.id,
+            email: req.user.email,
+            full_name: req.user.name
+        }
+    });
 });
 
 /* ---------- SOCKET.IO ---------- */
 io.on("connection", (socket) => {
-    console.log("User connected");
+    console.log("User connected:", socket.id);
 
     socket.on("sendMessage", async (data) => {
-        await prisma.message.create({
-            data: { text: data.text, userId: data.userId }
-        });
+        try {
+            const message = await prisma.message.create({
+                data: { text: data.text, userId: data.userId }
+            });
+            io.emit("newMessage", message);
+        } catch (err) {
+            console.error('Message error:', err);
+        }
+    });
 
-        io.emit("newMessage", data);
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
     });
 });
 
