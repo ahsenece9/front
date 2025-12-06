@@ -51,7 +51,7 @@ app.get("/", (req, res) => {
 
 /* ---------- REGISTER ---------- */
 app.post("/api/auth/register", async (req, res) => {
-    const { email, password, full_name } = req.body;
+    const { email, password, name, full_name } = req.body; // ✅ "name" ekledik
 
     if (!email || !password) {
         return res.status(400).json({ error: "Email and password required" });
@@ -64,7 +64,7 @@ app.post("/api/auth/register", async (req, res) => {
             data: { 
                 email, 
                 password: hashed,
-                name: full_name || email.split('@')[0]
+                name: name || full_name || email.split('@')[0] // ✅ Her ikisini de kabul et
             }
         });
         
@@ -76,7 +76,8 @@ app.post("/api/auth/register", async (req, res) => {
             user: {
                 id: user.id,
                 email: user.email,
-                full_name: user.name
+                full_name: user.name,
+                name: user.name // ✅ İkisini de döndür
             }
         });
     } catch (err) {
