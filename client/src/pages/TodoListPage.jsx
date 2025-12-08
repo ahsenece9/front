@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Plus, Check, Trash2, Star, Clock, Calendar as CalendarIcon, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TodoStats from '../components/TodoStats';
@@ -20,6 +20,13 @@ const TodoListPage = () => {
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [draggedTask, setDraggedTask] = useState(null);
     const [dragOverColumn, setDragOverColumn] = useState(null);
+    const [ganttTasks, setGanttTasks] = useState([
+        { id: 'g1', name: 'Proje taslak', start: '2024-03-01', end: '2024-03-05', color: '#8b5cf6' },
+        { id: 'g2', name: 'Görsel revizyon', start: '2024-03-04', end: '2024-03-08', color: '#ec4899' },
+    ]);
+    const [ganttForm, setGanttForm] = useState({ name: '', start: '', end: '' });
+    const [selectedColor, setSelectedColor] = useState('#8b5cf6');
+    const [rgb, setRgb] = useState({ r: 139, g: 92, b: 246 });
 
     const handleToggleCategory = (catId) => {
         if (selectedCategories.includes(catId)) {
@@ -112,6 +119,79 @@ const TodoListPage = () => {
         { id: 'other', title: 'Diğer Görevler', tasks: otherTasks, icon: CalendarIcon, color: '#3b82f6' },
     ];
 
+    const quickColors = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
+
+    const updateRgbFromHex = (hex) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        setRgb({ r, g, b });
+    };
+
+    const hexFromRgb = (r, g, b) =>
+        '#' +
+        [r, g, b]
+            .map((c) => {
+                const h = c.toString(16);
+                return h.length === 1 ? '0' + h : h;
+            })
+            .join('');
+
+    const adjustColorBrightness = (hex, percent) => {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const r = Math.max(0, Math.min(255, (num >> 16) + percent));
+        const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00ff) + percent));
+        const b = Math.max(0, Math.min(255, (num & 0x0000ff) + percent));
+        return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+    };
+
+    const datesForTimeline = useMemo(() => {
+        if (ganttTasks.length === 0) return [];
+        const dates = ganttTasks.flatMap((t) => [new Date(t.start), new Date(t.end)]);
+        const min = new Date(Math.min(...dates));
+        const max = new Date(Math.max(...dates));
+        const days = Math.ceil((max - min) / (1000 * 60 * 60 * 24)) + 1;
+        return Array.from({ length: days }, (_, i) => {
+            const d = new Date(min);
+            d.setDate(d.getDate() + i);
+            return d;
+        });
+    }, [ganttTasks]);
+
+    const minDate = useMemo(() => {
+        if (ganttTasks.length === 0) return null;
+        return new Date(Math.min(...ganttTasks.map((t) => new Date(t.start))));
+    }, [ganttTasks]);
+
+    const handleGanttSubmit = (e) => {
+        e.preventDefault();
+        if (!ganttForm.name.trim() || !ganttForm.start || !ganttForm.end) return;
+        if (new Date(ganttForm.start) > new Date(ganttForm.end)) {
+            return;
+        }
+        const newTask = {
+            id: `g-${Date.now()}`,
+            name: ganttForm.name.trim(),
+            start: ganttForm.start,
+            end: ganttForm.end,
+            color: selectedColor,
+        };
+        setGanttTasks((prev) => [...prev, newTask]);
+        setGanttForm({ name: '', start: '', end: '' });
+    };
+
+    const handleDeleteGantt = (id) => {
+        setGanttTasks((prev) => prev.filter((t) => t.id !== id));
+    };
+
+    const handleRgbChange = (channel, value) => {
+        const val = Number(value);
+        const next = { ...rgb, [channel]: val };
+        setRgb(next);
+        const hex = hexFromRgb(next.r, next.g, next.b);
+        setSelectedColor(hex);
+    };
+
     return (
         <div className="todo-container">
             <div className="todo-main">
@@ -199,6 +279,161 @@ const TodoListPage = () => {
                         </div>
                     </div>
                 )}
+
+                <div className="mt-8">
+                    <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-amber-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border border-white/50 dark:border-slate-800 rounded-3xl p-6 shadow-xl">
+                        <div className="flex flex-col lg:flex-row gap-6">
+                            <div className="w-full lg:w-1/3 space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 text-white grid place-items-center shadow-lg">
+                                        📊
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-slate-600 dark:text-slate-300 font-semibold">Gantt Şeması</p>
+                                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Zaman Çizelgesi</h2>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleGanttSubmit} className="space-y-3">
+                                    <input
+                                        type="text"
+                                        value={ganttForm.name}
+                                        onChange={(e) => setGanttForm({ ...ganttForm, name: e.target.value })}
+                                        placeholder="Görev adı"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <input
+                                            type="date"
+                                            value={ganttForm.start}
+                                            onChange={(e) => setGanttForm({ ...ganttForm, start: e.target.value })}
+                                            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            required
+                                        />
+                                        <input
+                                            type="date"
+                                            value={ganttForm.end}
+                                            onChange={(e) => setGanttForm({ ...ganttForm, end: e.target.value })}
+                                            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex gap-2">
+                                            {quickColors.map((c) => (
+                                                <button
+                                                    type="button"
+                                                    key={c}
+                                                    onClick={() => {
+                                                        setSelectedColor(c);
+                                                        updateRgbFromHex(c);
+                                                    }}
+                                                    className={`w-10 h-10 rounded-xl shadow-md border-2 ${selectedColor === c ? 'scale-110 border-slate-900' : 'border-transparent'}`}
+                                                    style={{ background: c, transition: 'all 0.2s ease' }}
+                                                />
+                                            ))}
+                                        </div>
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 space-y-2 shadow-inner">
+                                            <div className="h-12 rounded-xl border border-slate-200 dark:border-slate-700" style={{ background: selectedColor }} />
+                                            <div className="grid grid-cols-3 gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                                {['r', 'g', 'b'].map((channel) => (
+                                                    <div key={channel} className="space-y-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="uppercase">{channel}</span>
+                                                            <span>{rgb[channel]}</span>
+                                                        </div>
+                                                        <input
+                                                            type="range"
+                                                            min="0"
+                                                            max="255"
+                                                            value={rgb[channel]}
+                                                            onChange={(e) => handleRgbChange(channel, e.target.value)}
+                                                            className="w-full accent-indigo-500"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg hover:scale-[1.01] active:scale-[0.98] transition"
+                                    >
+                                        <Plus size={18} /> Görev ekle
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div className="w-full lg:w-2/3 bg-white/70 dark:bg-slate-900/60 rounded-2xl border border-white/50 dark:border-slate-800 shadow-inner p-4 overflow-x-auto">
+                                {ganttTasks.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-slate-500 dark:text-slate-400">
+                                        <div className="text-4xl mb-2">📊</div>
+                                        İlk Gantt görevini ekle.
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div className="grid grid-cols-[180px_1fr] gap-0 border-b border-slate-200 dark:border-slate-800">
+                                            <div className="font-semibold text-slate-700 dark:text-slate-200 px-3 py-2 bg-white/70 dark:bg-slate-900/80 rounded-tl-xl">
+                                                Görev
+                                            </div>
+                                            <div className="min-w-[640px]">
+                                                <div className="grid" style={{ gridTemplateColumns: `repeat(${datesForTimeline.length}, minmax(60px, 1fr))` }}>
+                                                    {datesForTimeline.map((d, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="text-center text-[11px] font-semibold text-slate-500 border-r border-slate-100 dark:border-slate-800 py-2"
+                                                        >
+                                                            {d.getDate()}/{d.getMonth() + 1}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {ganttTasks.map((task) => {
+                                            const startOffset = minDate ? Math.ceil((new Date(task.start) - minDate) / (1000 * 60 * 60 * 24)) : 0;
+                                            const duration =
+                                                Math.ceil((new Date(task.end) - new Date(task.start)) / (1000 * 60 * 60 * 24)) + 1;
+                                            const darker = adjustColorBrightness(task.color, -25);
+                                            return (
+                                                <div key={task.id} className="grid grid-cols-[180px_1fr] gap-0 items-center">
+                                                    <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/70 rounded-l-xl">
+                                                        <div>
+                                                            <div className="font-semibold text-slate-800 dark:text-white">{task.name}</div>
+                                                            <div className="text-xs text-slate-500">
+                                                                📅 {duration} gün · {task.start} - {task.end}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleDeleteGantt(task.id)}
+                                                            className="text-xs font-semibold text-rose-500 hover:text-rose-600"
+                                                        >
+                                                            Sil
+                                                        </button>
+                                                    </div>
+                                                    <div className="relative min-w-[640px] border-b border-slate-200 dark:border-slate-800 py-4">
+                                                        <div className="absolute inset-y-0 left-0 right-0 bg-[repeating-linear-gradient(90deg,#fafafa,#fafafa_60px,#f5f5f5_60px,#f5f5f5_120px)] dark:bg-[repeating-linear-gradient(90deg,#0f172a,#0f172a_60px,#111827_60px,#111827_120px)] rounded-r-xl" />
+                                                        <div
+                                                            className="absolute h-9 rounded-lg shadow-md flex items-center px-3 text-white text-sm font-semibold cursor-pointer overflow-hidden"
+                                                            style={{
+                                                                left: `calc(${startOffset} * 60px)`,
+                                                                width: `calc(${duration} * 60px)`,
+                                                                background: `linear-gradient(135deg, ${task.color} 0%, ${darker} 100%)`,
+                                                            }}
+                                                        >
+                                                            <span className="relative z-10">{task.name}</span>
+                                                            <span className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/30 to-transparent transition duration-500 hover:translate-x-[100%]" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div className="todo-sidebar">

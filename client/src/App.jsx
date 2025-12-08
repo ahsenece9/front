@@ -17,39 +17,42 @@ import SettingsPage from './pages/SettingsPage';
 
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
     return (
-        <ThemeProvider>
-            <AuthProvider>
-                <Router>
-                    <Routes>
-                        <Route path="/" element={<LandingPage />} />
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/register" element={<RegisterPage />} />
+        <ErrorBoundary>
+            <ThemeProvider>
+                <AuthProvider>
+                    <Router>
+                        <Routes>
+                            <Route path="/" element={<LandingPage />} />
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/register" element={<RegisterPage />} />
 
-                        <Route
-                            path="/dashboard"
-                            element={(
-                                <ProtectedRoute>
-                                    <DashboardLayout />
-                                </ProtectedRoute>
-                            )}
-                        >
-                            <Route index element={<DashboardHome />} />
-                            <Route path="calendar" element={<CalendarPage />} />
-                            <Route path="todo" element={<TodoListPage />} />
-                            <Route path="pomodoro" element={<PomodoroPage />} />
-                            <Route path="chat" element={<ChatPage />} />
-                            <Route path="groups" element={<GroupsPage />} />
-                            <Route path="groups/:groupId" element={<GroupDetailPage />} />
-                            <Route path="profile" element={<ProfilePage />} />
-                            <Route path="settings" element={<SettingsPage />} />
-                        </Route>
-                    </Routes>
-                </Router>
-            </AuthProvider>
-        </ThemeProvider>
+                            <Route
+                                path="/dashboard"
+                                element={(
+                                    <ProtectedRoute>
+                                        <DashboardLayout />
+                                    </ProtectedRoute>
+                                )}
+                            >
+                                <Route index element={<DashboardHome />} />
+                                <Route path="calendar" element={<CalendarPage />} />
+                                <Route path="todo" element={<TodoListPage />} />
+                                <Route path="pomodoro" element={<PomodoroPage />} />
+                                <Route path="chat" element={<ChatPage />} />
+                                <Route path="groups" element={<GroupsPage />} />
+                                <Route path="groups/:groupId" element={<GroupDetailPage />} />
+                                <Route path="profile" element={<ProfilePage />} />
+                                <Route path="settings" element={<SettingsPage />} />
+                            </Route>
+                        </Routes>
+                    </Router>
+                </AuthProvider>
+            </ThemeProvider>
+        </ErrorBoundary>
     );
 }
 

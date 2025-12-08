@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import { User, Shield, CheckCircle, AlertCircle, Camera, Mail } from 'lucide-react';
+// src/pages/ProfilePage.jsx
+// Profil sayfası - Ready Player Me avatar entegrasyonu ile güncellendi
+
+import React, { useState, useEffect } from 'react';
+import { User, Shield, CheckCircle, AlertCircle, Camera, Mail, Sparkles } from 'lucide-react';
+import AvatarCreator from '../components/avatar/AvatarCreator';
+import Avatar3D from '../components/avatar/Avatar3D';
 import '../styles/Profile.css';
+import '../styles/Avatar3D.css';
 
 const ProfilePage = () => {
     const [activeTab, setActiveTab] = useState('general');
+    const [avatarUrl, setAvatarUrl] = useState(null); // Ready Player Me GLB URL'si
+    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+    
     const [user, setUser] = useState({
         name: 'Ahmet Yılmaz',
         username: 'ahmetyilmaz',
@@ -12,6 +21,21 @@ const ProfilePage = () => {
         avatar: 'AY',
         verified: false
     });
+
+    // localStorage'dan avatar URL'sini yükle
+    useEffect(() => {
+        const savedAvatarUrl = localStorage.getItem('userAvatarUrl');
+        if (savedAvatarUrl) {
+            setAvatarUrl(savedAvatarUrl);
+        }
+    }, []);
+
+    // Avatar URL'si değiştiğinde localStorage'a kaydet
+    useEffect(() => {
+        if (avatarUrl) {
+            localStorage.setItem('userAvatarUrl', avatarUrl);
+        }
+    }, [avatarUrl]);
 
     const [passwords, setPasswords] = useState({
         current: '',
@@ -77,16 +101,57 @@ const ProfilePage = () => {
                     <h3>Kişisel Bilgiler</h3>
 
                     <div className="avatar-section">
+                        <div className="profile-avatar-container">
+                            {avatarUrl ? (
+                                <>
+                                    <div className="profile-avatar-large avatar-3d-profile-wrapper">
+                                        <Avatar3D 
+                                            avatarUrl={avatarUrl} 
+                                            size={120}
+                                            autoRotate={true}
+                                            interactionPrompt="auto"
+                                            className="avatar-3d-profile"
+                                        />
+                                    </div>
+                                    <div className="avatar-info">
+                                        <p className="avatar-name">{user.name}</p>
+                                        <p className="avatar-url-hint">3D Avatar hazır ✓</p>
+                                        <p className="avatar-hint-small">Döndürmek için sürükleyin</p>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
                         <div className="profile-avatar-large">
                             {user.avatar}
+                                    </div>
+                                    <div className="avatar-info">
+                                        <p className="avatar-name">{user.name}</p>
+                                        <p className="avatar-placeholder">Henüz avatarın yok</p>
+                                    </div>
+                                </>
+                            )}
                         </div>
                         <div className="avatar-actions">
-                            <button className="btn btn-primary" style={{ fontSize: '0.9rem' }}>
-                                <Camera size={16} style={{ marginRight: '6px' }} /> Fotoğraf Değiştir
+                            <button 
+                                className="btn btn-primary" 
+                                style={{ fontSize: '0.9rem' }}
+                                onClick={() => setIsAvatarModalOpen(true)}
+                            >
+                                <Sparkles size={16} style={{ marginRight: '6px' }} /> 
+                                {avatarUrl ? 'Avatarı Değiştir' : 'Avatar Oluştur'}
                             </button>
-                            <button className="btn" style={{ fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)' }}>
+                            {avatarUrl && (
+                                <button 
+                                    className="btn" 
+                                    style={{ fontSize: '0.9rem', background: 'rgba(255,255,255,0.05)' }}
+                                    onClick={() => {
+                                        setAvatarUrl(null);
+                                        localStorage.removeItem('userAvatarUrl');
+                                    }}
+                                >
                                 Kaldır
                             </button>
+                            )}
                         </div>
                     </div>
 
@@ -190,6 +255,17 @@ const ProfilePage = () => {
                     )}
                 </div>
             )}
+
+            {/* Ready Player Me Avatar Creator Modal */}
+            <AvatarCreator
+                isOpen={isAvatarModalOpen}
+                onClose={() => setIsAvatarModalOpen(false)}
+                onAvatarReady={(url) => {
+                    setAvatarUrl(url);
+                    // TODO: İleride bu URL'yi backend'e kaydedebiliriz
+                    console.log('Avatar URL kaydedildi:', url);
+                }}
+            />
         </div>
     );
 };

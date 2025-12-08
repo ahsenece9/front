@@ -74,11 +74,11 @@ const PomodoroTimer = ({
                         strokeDasharray={circumference}
                         strokeDashoffset={dashoffset}
                         style={{
-                            stroke: mode === 'work' 
-                                ? 'rgba(255, 255, 255, 0.9)' 
+                            stroke: mode === 'work'
+                                ? 'rgba(255, 255, 255, 0.9)'
                                 : mode === 'break'
-                                ? 'rgba(16, 185, 129, 0.9)'
-                                : 'rgba(59, 130, 246, 0.9)'
+                                    ? 'rgba(16, 185, 129, 0.9)'
+                                    : 'rgba(59, 130, 246, 0.9)'
                         }}
                     />
                 </svg>
