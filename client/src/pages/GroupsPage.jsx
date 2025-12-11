@@ -1,84 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import {
-    Send, Search, Users, UserPlus, X, Check, Plus,
-    MessageCircle, LogIn, MoreVertical, Phone, Video,
-    Smile, Paperclip, ArrowLeft, Settings, Moon, Sun, Palette,
-    Crown, UserMinus, Bell, BellOff, Shield, Sparkles, Star, Hash,
-    Image, Mic, AtSign, Link2, PhoneOff, Ban, Trash2, LogOut
+    Send, Search, Users, Plus, Circle,
+    Smile, Crown, Star, UserPlus, Settings, Shield
 } from 'lucide-react';
 import '../styles/Chat.css';
-import '../styles/GroupsEnhanced.css';
-
-// Wallpaper options with images
-const WALLPAPERS = [
-    { id: 'default', name: 'Varsayılan', type: 'gradient', value: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)' },
-    { id: 'mountains', name: 'Dağlar', type: 'image', value: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80' },
-    { id: 'ocean', name: 'Okyanus', type: 'image', value: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&q=80' },
-    { id: 'forest', name: 'Orman', type: 'image', value: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=80' },
-    { id: 'galaxy', name: 'Galaksi', type: 'image', value: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1920&q=80' },
-    { id: 'sunset', name: 'Gün Batımı', type: 'image', value: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=1920&q=80' },
-    { id: 'city', name: 'Şehir', type: 'image', value: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1920&q=80' },
-    { id: 'aurora', name: 'Kuzey Işıkları', type: 'image', value: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1920&q=80' },
-];
-
-// Color themes with gradients
-const COLOR_THEMES = [
-    { id: 'purple', name: 'Mor', primary: '#8b5cf6', secondary: '#6366f1', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #a855f7 100%)' },
-    { id: 'blue', name: 'Mavi', primary: '#3b82f6', secondary: '#0ea5e9', gradient: 'linear-gradient(135deg, #3b82f6 0%, #0ea5e9 50%, #06b6d4 100%)' },
-    { id: 'green', name: 'Yeşil', primary: '#22c55e', secondary: '#10b981', gradient: 'linear-gradient(135deg, #22c55e 0%, #10b981 50%, #14b8a6 100%)' },
-    { id: 'pink', name: 'Pembe', primary: '#ec4899', secondary: '#f472b6', gradient: 'linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #f43f5e 100%)' },
-    { id: 'orange', name: 'Turuncu', primary: '#f97316', secondary: '#fb923c', gradient: 'linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fbbf24 100%)' },
-    { id: 'red', name: 'Kırmızı', primary: '#ef4444', secondary: '#f87171', gradient: 'linear-gradient(135deg, #ef4444 0%, #f87171 50%, #dc2626 100%)' },
-    { id: 'teal', name: 'Turkuaz', primary: '#14b8a6', secondary: '#2dd4bf', gradient: 'linear-gradient(135deg, #14b8a6 0%, #2dd4bf 50%, #0d9488 100%)' },
-    { id: 'indigo', name: 'İndigo', primary: '#6366f1', secondary: '#818cf8', gradient: 'linear-gradient(135deg, #6366f1 0%, #818cf8 50%, #4f46e5 100%)' },
-];
-
-// Emoji categories
-const EMOJI_CATEGORIES = {
-    smileys: { icon: '😀', emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😍', '🥰', '😘', '😎', '🤩', '🥳', '😏', '🤔', '😴', '🤯'] },
-    emotions: { icon: '❤️', emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '💔', '❤️‍🔥', '💕', '💖', '😈', '👿', '💀', '👻', '👽', '🤖', '😺', '😻'] },
-    gestures: { icon: '👋', emojis: ['👋', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👍', '👎', '✊', '👊', '👏', '🙌', '🤝', '🙏', '💪', '✍️', '🤳'] },
-    objects: { icon: '🎉', emojis: ['🎉', '🎊', '🎁', '🎈', '🎮', '🎧', '🎼', '📱', '💻', '💰', '💎', '🔑', '📷', '🎥', '⏰', '💡', '📚', '✏️'] },
-    nature: { icon: '🌸', emojis: ['🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🦁', '🐸', '🌸', '🌹', '🌻', '🍀', '🌴', '☀️', '🌙', '⭐', '🌈', '🔥', '💧', '🌊'] },
-    food: { icon: '🍕', emojis: ['🍎', '🍕', '🍔', '🍟', '🌭', '🍿', '🍦', '🎂', '🍩', '☕', '🍺', '🥤', '🍷'] },
-    symbols: { icon: '💯', emojis: ['💯', '✅', '❌', '❓', '❗', '💢', '💥', '💫', '💬', '💭', '🔴', '🟢', '🔵', '🟣', '⭐', '✨'] },
-};
-
-// Stickers with categories
-const STICKERS = [
-    { id: 's1', name: 'Mutlu', url: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif', category: 'happy' },
-    { id: 's2', name: 'Thumbs Up', url: 'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif', category: 'gesture' },
-    { id: 's3', name: 'Kalp', url: 'https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif', category: 'love' },
-    { id: 's4', name: 'Kutlama', url: 'https://media.giphy.com/media/g9582DNuQppxC/giphy.gif', category: 'happy' },
-    { id: 's5', name: 'LOL', url: 'https://media.giphy.com/media/10JhviFuU2gWD6/giphy.gif', category: 'funny' },
-    { id: 's6', name: 'Dans', url: 'https://media.giphy.com/media/l0MYGb1LuZ3n7dRnO/giphy.gif', category: 'fun' },
-    { id: 's7', name: 'Cool', url: 'https://media.giphy.com/media/62PP2yEIAZF6g/giphy.gif', category: 'cool' },
-    { id: 's8', name: 'Wow', url: 'https://media.giphy.com/media/udmx3pgdiD7tm/giphy.gif', category: 'reaction' },
-    { id: 's9', name: 'Evet!', url: 'https://media.giphy.com/media/l2JJKs3I69qfaQleE/giphy.gif', category: 'gesture' },
-    { id: 's10', name: 'Hayır', url: 'https://media.giphy.com/media/3o7TKwmnDgQb5jemjK/giphy.gif', category: 'gesture' },
-    { id: 's11', name: 'Teşekkür', url: 'https://media.giphy.com/media/osjgQPWRx3cac/giphy.gif', category: 'happy' },
-    { id: 's12', name: 'Parti', url: 'https://media.giphy.com/media/l0MYJnJQ4EiYLxvQ4/giphy.gif', category: 'fun' },
-    { id: 's13', name: 'Hi', url: 'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif', category: 'greeting' },
-    { id: 's14', name: 'Aşk', url: 'https://media.giphy.com/media/l4pTdcifPZLpDjL1e/giphy.gif', category: 'love' },
-    { id: 's15', name: 'Heyecanlı', url: 'https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif', category: 'reaction' },
-    { id: 's16', name: 'Üzgün', url: 'https://media.giphy.com/media/OPU6wzx8JrHna/giphy.gif', category: 'sad' },
-];
 
 const GroupsPage = () => {
     const { user } = useAuth();
+    const [selectedGroup, setSelectedGroup] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filter, setFilter] = useState('all');
+    const [messages, setMessages] = useState({});
+    const [inputMessage, setInputMessage] = useState('');
+    const messagesEndRef = useRef(null);
 
-    // Theme & Customization
-    const [isDarkMode, setIsDarkMode] = useState(true);
-    const [selectedWallpaper, setSelectedWallpaper] = useState('galaxy');
-    const [selectedColorTheme, setSelectedColorTheme] = useState('pink');
-    const [showSettings, setShowSettings] = useState(false);
-
-    // Options Menu
-    const [showOptionsMenu, setShowOptionsMenu] = useState(false);
-    const [mutedGroups, setMutedGroups] = useState([]);
-
-    // Groups & Selection
+    // Mock groups data
     const [groups, setGroups] = useState([
         {
             id: 'g1',
@@ -92,23 +30,21 @@ const GroupsPage = () => {
             lastMessageSender: 'Ali',
             unread: 3,
             isAdmin: true,
-            isPinned: true,
-            color: '#ec4899'
+            isPinned: true
         },
         {
             id: 'g2',
             name: 'Yazılım Takımı',
-            description: 'Backend & Frontend geliştiriciler',
+            description: 'Yazılım geliştirme ekibi',
             avatar: 'YT',
             memberCount: 8,
             onlineCount: 5,
-            lastMessage: 'Deploy tamamlandı! 🎉',
+            lastMessage: 'Kod incelemesi tamamlandı',
             lastMessageTime: new Date(Date.now() - 3600000),
-            lastMessageSender: 'Mehmet',
+            lastMessageSender: 'Zeynep',
             unread: 0,
             isAdmin: false,
-            isPinned: true,
-            color: '#3b82f6'
+            isPinned: false
         },
         {
             id: 'g3',
@@ -117,203 +53,47 @@ const GroupsPage = () => {
             avatar: 'TG',
             memberCount: 4,
             onlineCount: 2,
-            lastMessage: 'Yeni mockuplar hazır 🎨',
-            lastMessageTime: new Date(Date.now() - 7200000),
-            lastMessageSender: 'Zeynep',
-            unread: 5,
+            lastMessage: 'Yeni mockup hazır!',
+            lastMessageTime: new Date(Date.now() - 86400000),
+            lastMessageSender: 'Ayşe',
+            unread: 1,
             isAdmin: true,
-            isPinned: false,
-            color: '#8b5cf6'
+            isPinned: true
         },
         {
             id: 'g4',
-            name: 'Pazarlama',
-            description: 'Marketing ve sosyal medya',
-            avatar: 'PZ',
-            memberCount: 6,
-            onlineCount: 1,
-            lastMessage: 'Kampanya başladı',
-            lastMessageTime: new Date(Date.now() - 86400000),
-            lastMessageSender: 'Ayşe',
-            unread: 0,
+            name: 'Genel',
+            description: 'Genel sohbet',
+            avatar: 'GN',
+            memberCount: 12,
+            onlineCount: 7,
+            lastMessage: 'Kahve molası! ☕',
+            lastMessageTime: new Date(Date.now() - 7200000),
+            unread: 5,
             isAdmin: false,
-            isPinned: false,
-            color: '#f97316'
-        },
+            isPinned: false
+        }
     ]);
-    const [selectedGroup, setSelectedGroup] = useState(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filter, setFilter] = useState('all');
-    const [isTyping, setIsTyping] = useState(false);
-    const [typingUsers, setTypingUsers] = useState([]);
 
-    // Call States
-    const [showCallModal, setShowCallModal] = useState(false);
-    const [callType, setCallType] = useState('voice');
-    const [callStatus, setCallStatus] = useState('calling');
-    const [callDuration, setCallDuration] = useState(0);
-    const localVideoRef = useRef(null);
-
-    // Call Effect for Camera
-    useEffect(() => {
-        let stream = null;
-        const startCamera = async () => {
-            if (showCallModal && callType === 'video') {
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                    if (localVideoRef.current) {
-                        localVideoRef.current.srcObject = stream;
-                    }
-                } catch (err) {
-                    console.error("Kamera hatası:", err);
-                    alert("Kamera erişimi sağlanamadı. Lütfen izinleri kontrol edin.");
-                }
-            }
-        };
-        startCamera();
-        return () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-        };
-    }, [showCallModal, callType]);
-
-    // Start a call
-    const startCall = (type) => {
-        if (!selectedGroup) return;
-        setCallType(type);
-        setCallStatus('calling');
-        setCallDuration(0);
-        setShowCallModal(true);
-        setTimeout(() => {
-            setCallStatus('connected');
-            const timer = setInterval(() => {
-                setCallDuration(prev => prev + 1);
-            }, 1000);
-            window.callTimer = timer;
-        }, 2000);
-    };
-
-    // End call
-    const endCall = () => {
-        if (window.callTimer) {
-            clearInterval(window.callTimer);
-        }
-        if (selectedGroup) {
-            const callLogMessage = {
-                id: Date.now(),
-                content: `${callType === 'video' ? 'Görüntülü Grup Araması' : 'Sesli Grup Araması'} - ${formatDuration(callDuration)}`,
-                type: 'call-log',
-                callType: callType,
-                duration: formatDuration(callDuration),
-                senderId: 'system',
-                senderName: 'Sistem',
-                time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
-                isMe: false,
-                isSystem: true
-            };
-            setMessages(prev => ({
-                ...prev,
-                [selectedGroup.id]: [...(prev[selectedGroup.id] || []), callLogMessage]
-            }));
-            setGroups(prev => prev.map(g =>
-                g.id === selectedGroup.id
-                    ? { ...g, lastMessage: `${callType === 'video' ? '📹' : '📞'} Grup Araması`, lastMessageTime: new Date() }
-                    : g
-            ));
-        }
-        setCallStatus('ended');
-        setTimeout(() => {
-            setShowCallModal(false);
-            setCallStatus('calling');
-            setCallDuration(0);
-        }, 1000);
-    };
-
-    // Format call duration
-    const formatDuration = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    // Messages
-    const [messages, setMessages] = useState({});
-    const [inputMessage, setInputMessage] = useState('');
-    const messagesEndRef = useRef(null);
-
-    // Emoji & Stickers
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const [emojiTab, setEmojiTab] = useState('emoji');
-    const [emojiCategory, setEmojiCategory] = useState('smileys');
-    const [favoriteEmojis, setFavoriteEmojis] = useState(['😀', '❤️', '👍', '🎉', '🔥', '😂', '✅', '💯', '🙏', '✨']);
-    const fileInputRef = useRef(null);
-
-    // Modals
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showJoinModal, setShowJoinModal] = useState(false);
-    const [showMembersModal, setShowMembersModal] = useState(false);
-    const [showGroupInfo, setShowGroupInfo] = useState(false);
-    const [newGroupName, setNewGroupName] = useState('');
-    const [newGroupDescription, setNewGroupDescription] = useState('');
-    const [newGroupPassword, setNewGroupPassword] = useState('');
-    const [joinGroupName, setJoinGroupName] = useState('');
-    const [joinGroupPassword, setJoinGroupPassword] = useState('');
-
-    // Mock members with more details
-    const groupMembers = [
-        { id: 'm1', name: 'Ali Yılmaz', avatar: 'AY', role: 'admin', online: true, lastSeen: 'Şimdi aktif', status: 'Kodlama yapıyor 💻' },
-        { id: 'm2', name: 'Zeynep Demir', avatar: 'ZD', role: 'moderator', online: true, lastSeen: 'Şimdi aktif', status: 'Tasarım modunda 🎨' },
-        { id: 'm3', name: 'Mehmet Kaya', avatar: 'MK', role: 'member', online: false, lastSeen: '2 saat önce', status: '' },
-        { id: 'm4', name: 'Ayşe Çelik', avatar: 'AÇ', role: 'member', online: true, lastSeen: 'Şimdi aktif', status: 'Toplantıda 📞' },
-        { id: 'm5', name: 'Can Yıldız', avatar: 'CY', role: 'member', online: false, lastSeen: 'Dün', status: '' },
-    ];
-
-    // Current theme
-    const currentTheme = COLOR_THEMES.find(t => t.id === selectedColorTheme) || COLOR_THEMES[0];
-    const currentWallpaper = WALLPAPERS.find(w => w.id === selectedWallpaper) || WALLPAPERS[0];
-
-    // Initialize mock messages with more variety
+    // Initialize mock messages
     useEffect(() => {
         const mockMessages = {
             'g1': [
-                { id: 1, content: 'Herkese merhaba! 👋', senderId: 'm1', senderName: 'Ali Yılmaz', senderAvatar: 'AY', time: '10:00', isMe: false },
-                { id: 2, content: 'Proje ne durumda arkadaşlar?', senderId: 'm2', senderName: 'Zeynep Demir', senderAvatar: 'ZD', time: '10:05', isMe: false },
-                { id: 3, content: 'Backend bitti, frontend devam ediyor 🚀', senderId: 'me', time: '10:10', isMe: true },
-                { id: 4, content: 'Harika! Ben de tasarımları tamamladım', senderId: 'm2', senderName: 'Zeynep Demir', senderAvatar: 'ZD', time: '10:12', isMe: false },
-                { id: 5, content: 'Toplantı yarın saat 10:00\'da yapalım mı?', senderId: 'm1', senderName: 'Ali Yılmaz', senderAvatar: 'AY', time: '10:15', isMe: false },
-                { id: 6, content: 'Bence de uygun 👍', senderId: 'm4', senderName: 'Ayşe Çelik', senderAvatar: 'AÇ', time: '10:18', isMe: false },
+                { id: 1, content: 'Merhaba ekip!', sender: 'Ali', senderId: 'u1', time: '10:30', isMe: false },
+                { id: 2, content: 'Selam Ali!', sender: 'Ben', senderId: 'me', time: '10:31', isMe: true },
+                { id: 3, content: 'Bugünkü toplantı saat kaçta?', sender: 'Zeynep', senderId: 'u2', time: '10:32', isMe: false },
+                { id: 4, content: 'Toplantı yarın saat 10:00', sender: 'Ali', senderId: 'u1', time: '10:35', isMe: false },
             ],
             'g2': [
-                { id: 1, content: 'Deploy başlıyor! 🎬', senderId: 'm3', senderName: 'Mehmet Kaya', senderAvatar: 'MK', time: '14:00', isMe: false },
-                { id: 2, content: 'Build başarılı ✅', senderId: 'm3', senderName: 'Mehmet Kaya', senderAvatar: 'MK', time: '14:15', isMe: false },
-                { id: 3, content: 'Deploy tamamlandı! 🎉', senderId: 'm3', senderName: 'Mehmet Kaya', senderAvatar: 'MK', time: '14:30', isMe: false },
+                { id: 1, content: 'Kod incelemesi tamamlandı', sender: 'Zeynep', senderId: 'u2', time: '09:00', isMe: false },
             ],
+            'g3': [
+                { id: 1, content: 'Yeni mockup hazır!', sender: 'Ayşe', senderId: 'u3', time: '14:20', isMe: false },
+                { id: 2, content: 'Harika görünüyor!', sender: 'Ben', senderId: 'me', time: '14:25', isMe: true },
+            ]
         };
         setMessages(mockMessages);
-        setTimeout(() => {
-            setTypingUsers(['Zeynep']);
-        }, 3000);
-        setTimeout(() => {
-            setTypingUsers([]);
-        }, 6000);
     }, []);
-
-    // Load/Save preferences
-    useEffect(() => {
-        const savedTheme = localStorage.getItem('groupColorTheme');
-        const savedWallpaper = localStorage.getItem('groupWallpaper');
-        const savedDarkMode = localStorage.getItem('groupDarkMode');
-        if (savedTheme) setSelectedColorTheme(savedTheme);
-        if (savedWallpaper) setSelectedWallpaper(savedWallpaper);
-        if (savedDarkMode !== null) setIsDarkMode(savedDarkMode === 'true');
-    }, []);
-
-    useEffect(() => {
-        localStorage.setItem('groupColorTheme', selectedColorTheme);
-        localStorage.setItem('groupWallpaper', selectedWallpaper);
-        localStorage.setItem('groupDarkMode', isDarkMode.toString());
-    }, [selectedColorTheme, selectedWallpaper, isDarkMode]);
 
     // Scroll to bottom
     const scrollToBottom = () => {
@@ -323,176 +103,45 @@ const GroupsPage = () => {
         scrollToBottom();
     }, [messages, selectedGroup]);
 
-    // Filter groups
-    const filteredGroups = groups.filter(g => {
-        const matchesSearch = g.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = filter === 'all' || (filter === 'admin' && g.isAdmin) || (filter === 'pinned' && g.isPinned);
-        return matchesSearch && matchesFilter;
-    }).sort((a, b) => {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-        return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
-    });
-
     // Send message
     const handleSendMessage = (e) => {
         e.preventDefault();
         if (!inputMessage.trim() || !selectedGroup) return;
+
         const newMessage = {
             id: Date.now(),
             content: inputMessage.trim(),
+            sender: user?.full_name || 'Ben',
             senderId: 'me',
             time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
             isMe: true
         };
+
         setMessages(prev => ({
             ...prev,
             [selectedGroup.id]: [...(prev[selectedGroup.id] || []), newMessage]
         }));
+
         setGroups(prev => prev.map(g =>
             g.id === selectedGroup.id
-                ? { ...g, lastMessage: inputMessage.trim(), lastMessageTime: new Date(), lastMessageSender: 'Sen', unread: 0 }
+                ? { ...g, lastMessage: inputMessage.trim(), lastMessageTime: new Date(), lastMessageSender: 'Ben', unread: 0 }
                 : g
         ));
+
         setInputMessage('');
-        setShowEmojiPicker(false);
     };
 
-    // Add emoji
-    const addEmoji = (emoji) => {
-        setInputMessage(prev => prev + emoji);
-    };
+    // Filter Logic
+    const filteredGroups = groups.filter(g => {
+        const matchesFilter = filter === 'all' ||
+            (filter === 'pinned' && g.isPinned) ||
+            (filter === 'admin' && g.isAdmin);
+        const matchesSearch = g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            g.description.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesFilter && matchesSearch;
+    });
 
-    // Send sticker
-    const sendSticker = (sticker) => {
-        if (!selectedGroup) return;
-        const newMessage = {
-            id: Date.now(),
-            content: '',
-            sticker: sticker.url,
-            stickerName: sticker.name,
-            senderId: 'me',
-            time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
-            isMe: true
-        };
-        setMessages(prev => ({
-            ...prev,
-            [selectedGroup.id]: [...(prev[selectedGroup.id] || []), newMessage]
-        }));
-        setGroups(prev => prev.map(g =>
-            g.id === selectedGroup.id
-                ? { ...g, lastMessage: `🎭 ${sticker.name}`, lastMessageTime: new Date(), lastMessageSender: 'Sen' }
-                : g
-        ));
-        setShowEmojiPicker(false);
-    };
-
-    // Handle file upload
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file || !selectedGroup) return;
-        const isImage = file.type.startsWith('image/');
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const newMessage = {
-                id: Date.now(),
-                content: isImage ? '' : `📎 ${file.name}`,
-                image: isImage ? event.target.result : null,
-                senderId: 'me',
-                time: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
-                isMe: true
-            };
-            setMessages(prev => ({
-                ...prev,
-                [selectedGroup.id]: [...(prev[selectedGroup.id] || []), newMessage]
-            }));
-            setGroups(prev => prev.map(g =>
-                g.id === selectedGroup.id
-                    ? { ...g, lastMessage: isImage ? '📷 Fotoğraf' : `📎 ${file.name}`, lastMessageTime: new Date(), lastMessageSender: 'Sen' }
-                    : g
-            ));
-        };
-        reader.readAsDataURL(file);
-        e.target.value = '';
-    };
-
-    // Create group
-    const handleCreateGroup = () => {
-        if (!newGroupName.trim()) return;
-        const colors = ['#ec4899', '#3b82f6', '#8b5cf6', '#22c55e', '#f97316', '#ef4444'];
-        const newGroup = {
-            id: `g${Date.now()}`,
-            name: newGroupName.trim(),
-            description: newGroupDescription.trim() || 'Yeni grup',
-            avatar: newGroupName.substring(0, 2).toUpperCase(),
-            memberCount: 1,
-            onlineCount: 1,
-            lastMessage: 'Grup oluşturuldu ✨',
-            lastMessageTime: new Date(),
-            lastMessageSender: 'Sistem',
-            unread: 0,
-            isAdmin: true,
-            isPinned: false,
-            color: colors[Math.floor(Math.random() * colors.length)]
-        };
-        setGroups(prev => [newGroup, ...prev]);
-        setShowCreateModal(false);
-        setNewGroupName('');
-        setNewGroupDescription('');
-        setNewGroupPassword('');
-    };
-
-    // Join group
-    const handleJoinGroup = () => {
-        if (!joinGroupName.trim()) return;
-        alert(`"${joinGroupName}" grubuna katılma isteği gönderildi! ✨`);
-        setShowJoinModal(false);
-        setJoinGroupName('');
-        setJoinGroupPassword('');
-    };
-
-    // Toggle pin
-    const togglePin = (groupId) => {
-        setGroups(prev => prev.map(g =>
-            g.id === groupId ? { ...g, isPinned: !g.isPinned } : g
-        ));
-    };
-
-    // Toggle mute group
-    const toggleMuteGroup = (groupId) => {
-        if (mutedGroups.includes(groupId)) {
-            setMutedGroups(prev => prev.filter(id => id !== groupId));
-        } else {
-            setMutedGroups(prev => [...prev, groupId]);
-        }
-        setShowOptionsMenu(false);
-    };
-
-    // Delete group chat
-    const deleteGroupChat = (groupId) => {
-        if (window.confirm('Bu grup sohbetini silmek istediğinizden emin misiniz?')) {
-            setMessages(prev => {
-                const newMessages = { ...prev };
-                delete newMessages[groupId];
-                return newMessages;
-            });
-            setGroups(prev => prev.map(g =>
-                g.id === groupId ? { ...g, lastMessage: '', unread: 0 } : g
-            ));
-            setShowOptionsMenu(false);
-        }
-    };
-
-    // Leave group
-    const leaveGroup = (groupId) => {
-        if (window.confirm('Bu gruptan ayrılmak istediğinizden emin misiniz?')) {
-            setGroups(prev => prev.filter(g => g.id !== groupId));
-            setSelectedGroup(null);
-            setShowOptionsMenu(false);
-        }
-    };
-
-    // Get time ago
+    // Get time ago text
     const getTimeAgo = (date) => {
         const now = new Date();
         const diff = now - new Date(date);
@@ -502,585 +151,456 @@ const GroupsPage = () => {
         if (minutes < 1) return 'Şimdi';
         if (minutes < 60) return `${minutes}d`;
         if (hours < 24) return `${hours}s`;
-        if (days < 7) return `${days}g`;
-        return new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+        return `${days}g`;
     };
 
-    // Wallpaper style
-    const getWallpaperStyle = () => {
-        if (currentWallpaper.type === 'image') {
-            return {
-                backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${currentWallpaper.value})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-            };
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
         }
-        return { background: currentWallpaper.value };
     };
 
-    const containerStyle = {
-        '--theme-primary': currentTheme.primary,
-        '--theme-secondary': currentTheme.secondary,
-        '--theme-gradient': currentTheme.gradient,
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                type: "spring",
+                stiffness: 100
+            }
+        }
     };
 
     if (!user) {
         return (
-            <div className={`groups-login-prompt ${isDarkMode ? 'dark' : 'light'}`}>
-                <div className="login-card">
-                    <div className="login-icon">
-                        <Users size={64} />
-                    </div>
-                    <h2>Gruplara Hoş Geldiniz</h2>
-                    <p>Gruplara erişmek için lütfen giriş yapın</p>
+            <div className="dashboard-home" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <Users size={64} style={{ marginBottom: '1rem', color: 'var(--text-muted)' }} />
+                    <h2 style={{ color: 'var(--text-main)' }}>Giriş Yapın</h2>
+                    <p style={{ color: 'var(--text-muted)' }}>Gruplara erişmek için lütfen giriş yapın</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={`groups-container-enhanced ${isDarkMode ? 'dark' : 'light'}`} style={containerStyle}>
-            {/* Animated Background */}
-            <div className="animated-bg">
-                <div className="bg-orb bg-orb-1" style={{ background: currentTheme.primary }}></div>
-                <div className="bg-orb bg-orb-2" style={{ background: currentTheme.secondary }}></div>
-                <div className="bg-orb bg-orb-3" style={{ background: currentTheme.primary }}></div>
-            </div>
-
-            {/* Sidebar */}
-            <div className="groups-sidebar">
-                {/* Header */}
-                <div className="sidebar-header-enhanced">
-                    <div className="header-row">
-                        <div className="logo-section">
-                            <div className="logo-icon" style={{ background: currentTheme.gradient }}>
-                                <Users size={22} />
-                            </div>
-                            <h1>Gruplar</h1>
-                        </div>
-                        <div className="header-actions">
-                            <button className="icon-btn-modern" onClick={() => setIsDarkMode(!isDarkMode)}>
-                                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-                            </button>
-                            <button className="icon-btn-modern" onClick={() => setShowSettings(true)}>
-                                <Palette size={18} />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Search */}
-                    <div className="search-container">
-                        <Search size={18} />
-                        <input
-                            type="text"
-                            placeholder="Grup ara..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="action-row">
-                        <button className="action-btn-primary" onClick={() => setShowCreateModal(true)} style={{ background: currentTheme.gradient }}>
-                            <Plus size={18} />
-                            <span>Yeni Grup</span>
-                        </button>
-                        <button className="action-btn-secondary" onClick={() => setShowJoinModal(true)}>
-                            <LogIn size={18} />
-                            <span>Katıl</span>
-                        </button>
-                    </div>
+        <motion.div
+            className="dashboard-home"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+        >
+            {/* Header */}
+            <motion.div className="welcome-section" variants={itemVariants} style={{ marginBottom: '2rem' }}>
+                <div className="welcome-text">
+                    <h1>
+                        <Users size={40} style={{ verticalAlign: 'middle', marginRight: '12px' }} />
+                        Gruplar
+                    </h1>
+                    <p>Grup sohbetlerinizi yönetin</p>
                 </div>
-
-                {/* Filter Tabs */}
-                <div className="filter-tabs-enhanced">
-                    {[
-                        { key: 'all', label: 'Tümü', count: groups.length },
-                        { key: 'pinned', label: 'Sabitler', icon: Star, count: groups.filter(g => g.isPinned).length },
-                        { key: 'admin', label: 'Yönetici', icon: Crown, count: groups.filter(g => g.isAdmin).length },
-                    ].map(tab => (
-                        <button
-                            key={tab.key}
-                            className={`filter-tab-enhanced ${filter === tab.key ? 'active' : ''}`}
-                            onClick={() => setFilter(tab.key)}
-                            style={filter === tab.key ? { borderColor: currentTheme.primary, color: currentTheme.primary } : {}}
-                        >
-                            {tab.icon && <tab.icon size={14} />}
-                            {tab.label}
-                            <span className="tab-count">{tab.count}</span>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Group List */}
-                <div className="groups-list">
-                    {filteredGroups.length === 0 ? (
-                        <div className="empty-state">
-                            <div className="empty-icon" style={{ background: `${currentTheme.primary}20` }}>
-                                <Users size={48} style={{ color: currentTheme.primary }} />
-                            </div>
-                            <p>Henüz grup yok</p>
-                            <span>Yeni bir grup oluşturun veya mevcut bir gruba katılın</span>
-                        </div>
-                    ) : (
-                        filteredGroups.map(group => (
-                            <div
-                                key={group.id}
-                                className={`group-item ${selectedGroup?.id === group.id ? 'active' : ''} ${group.isPinned ? 'pinned' : ''}`}
-                                onClick={() => {
-                                    setSelectedGroup(group);
-                                    setGroups(prev => prev.map(g =>
-                                        g.id === group.id ? { ...g, unread: 0 } : g
-                                    ));
-                                }}
-                            >
-                                {group.isPinned && <div className="pin-indicator"><Star size={10} /></div>}
-                                <div className="group-avatar" style={{ background: `linear-gradient(135deg, ${group.color}, ${group.color}aa)` }}>
-                                    <Users size={20} />
-                                    <div className="online-dot" style={{ background: group.onlineCount > 0 ? '#22c55e' : '#64748b' }}></div>
-                                </div>
-                                <div className="group-info">
-                                    <div className="group-row">
-                                        <span className="group-name">
-                                            {group.name}
-                                            {group.isAdmin && <Crown size={12} className="admin-badge" />}
-                                        </span>
-                                        <span className="group-time">{getTimeAgo(group.lastMessageTime)}</span>
-                                    </div>
-                                    <div className="group-row">
-                                        <span className="group-preview">
-                                            <span className="sender-name">{group.lastMessageSender}:</span> {group.lastMessage}
-                                        </span>
-                                        {group.unread > 0 && (
-                                            <span className="unread-count" style={{ background: currentTheme.gradient }}>{group.unread}</span>
-                                        )}
-                                    </div>
-                                    <div className="group-meta">
-                                        <span><Users size={12} /> {group.memberCount}</span>
-                                        <span className="online-count">• {group.onlineCount} çevrimiçi</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
+                <button
+                    style={{
+                        padding: '12px 24px',
+                        borderRadius: 'var(--radius-md)',
+                        border: 'none',
+                        background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}
+                >
+                    <Plus size={20} />
+                    Yeni Grup Oluştur
+                </button>
+            </motion.div>
 
             {/* Main Content */}
-            <div className="groups-main" style={getWallpaperStyle()}>
-                {!selectedGroup ? (
-                    <div className="no-group-selected">
-                        <div className="welcome-card">
-                            <div className="welcome-icon" style={{ background: currentTheme.gradient }}>
-                                <Sparkles size={48} />
-                            </div>
-                            <h2>Grup Sohbetine Hoş Geldiniz! 👋</h2>
-                            <p>Sohbete başlamak için soldaki listeden bir grup seçin</p>
-                            <div className="welcome-features">
-                                <div className="feature-item">
-                                    <MessageCircle size={20} style={{ color: currentTheme.primary }} />
-                                    <span>Grup Sohbeti</span>
-                                </div>
-                                <div className="feature-item">
-                                    <Image size={20} style={{ color: currentTheme.primary }} />
-                                    <span>Medya Paylaşımı</span>
-                                </div>
-                                <div className="feature-item">
-                                    <Users size={20} style={{ color: currentTheme.primary }} />
-                                    <span>Üye Yönetimi</span>
-                                </div>
-                            </div>
+            <div className="dashboard-content-row">
+                {/* Groups List */}
+                <motion.div className="dashboard-card" variants={itemVariants} style={{ flex: 1 }}>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <h3 style={{ marginBottom: '1rem' }}>Gruplarım</h3>
+
+                        {/* Search */}
+                        <div style={{ position: 'relative', marginBottom: '1rem' }}>
+                            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <input
+                                type="text"
+                                placeholder="Grup ara..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 10px 10px 40px',
+                                    background: 'var(--bg-input)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--radius-md)',
+                                    color: 'var(--text-main)'
+                                }}
+                            />
+                        </div>
+
+                        {/* Filter Tabs */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                            <button
+                                onClick={() => setFilter('all')}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px solid var(--border-color)',
+                                    background: filter === 'all' ? 'var(--color-primary)' : 'var(--bg-input)',
+                                    color: filter === 'all' ? 'white' : 'var(--text-main)',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 500
+                                }}
+                            >
+                                Tümü
+                            </button>
+                            <button
+                                onClick={() => setFilter('pinned')}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px solid var(--border-color)',
+                                    background: filter === 'pinned' ? 'var(--color-primary)' : 'var(--bg-input)',
+                                    color: filter === 'pinned' ? 'white' : 'var(--text-main)',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 500,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                            >
+                                <Star size={14} fill={filter === 'pinned' ? 'white' : 'none'} />
+                                Sabitlenmiş
+                            </button>
+                            <button
+                                onClick={() => setFilter('admin')}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: '1px solid var(--border-color)',
+                                    background: filter === 'admin' ? 'var(--color-primary)' : 'var(--bg-input)',
+                                    color: filter === 'admin' ? 'white' : 'var(--text-main)',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 500,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                            >
+                                <Shield size={14} />
+                                Yöneticisi Olduğum
+                            </button>
                         </div>
                     </div>
-                ) : (
-                    <>
-                        {/* Chat Header */}
-                        <div className="chat-header-enhanced">
-                            <button className="back-btn-mobile" onClick={() => setSelectedGroup(null)}>
-                                <ArrowLeft size={24} />
-                            </button>
-                            <div className="chat-info" onClick={() => setShowGroupInfo(true)}>
-                                <div className="chat-avatar" style={{ background: `linear-gradient(135deg, ${selectedGroup.color}, ${selectedGroup.color}aa)` }}>
-                                    <Users size={24} />
-                                </div>
-                                <div className="chat-details">
-                                    <h3>
-                                        {selectedGroup.name}
-                                        {selectedGroup.isAdmin && <Crown size={14} className="crown-badge" style={{ color: '#fbbf24' }} />}
-                                    </h3>
-                                    <span className="chat-status">
-                                        {selectedGroup.memberCount} üye • {selectedGroup.onlineCount} çevrimiçi
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="chat-header-actions">
-                                <button className="header-action-btn" onClick={() => setShowMembersModal(true)}>
-                                    <Users size={20} />
-                                </button>
-                                <button className="header-action-btn" onClick={() => startCall('video')} title="Görüntülü Arama">
-                                    <Video size={20} />
-                                </button>
-                                <button className="header-action-btn" onClick={() => startCall('voice')} title="Sesli Arama">
-                                    <Phone size={20} />
-                                </button>
-                                <button className="header-action-btn" onClick={() => togglePin(selectedGroup.id)}>
-                                    <Star size={20} fill={selectedGroup.isPinned ? 'currentColor' : 'none'} />
-                                </button>
-                                <div className="options-menu-wrapper">
-                                    <button
-                                        className="header-action-btn"
-                                        onClick={() => setShowOptionsMenu(!showOptionsMenu)}
-                                    >
-                                        <MoreVertical size={20} />
-                                    </button>
-                                    {showOptionsMenu && (
-                                        <div className="options-dropdown">
-                                            <button
-                                                className="options-dropdown-item"
-                                                onClick={() => toggleMuteGroup(selectedGroup.id)}
-                                            >
-                                                {mutedGroups.includes(selectedGroup.id) ? <Bell size={16} /> : <BellOff size={16} />}
-                                                {mutedGroups.includes(selectedGroup.id) ? 'Bildirimleri Aç' : 'Bildirimleri Kapat'}
-                                            </button>
-                                            <button
-                                                className="options-dropdown-item"
-                                                onClick={() => deleteGroupChat(selectedGroup.id)}
-                                            >
-                                                <Trash2 size={16} />
-                                                Sohbeti Sil
-                                            </button>
-                                            <button
-                                                className="options-dropdown-item danger"
-                                                onClick={() => leaveGroup(selectedGroup.id)}
-                                            >
-                                                <LogOut size={16} />
-                                                Gruptan Ayrıl
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Messages */}
-                        <div className="messages-area" onClick={() => setShowEmojiPicker(false)}>
-                            {(messages[selectedGroup.id] || []).map((msg) => {
-                                if (msg.type === 'call-log') {
-                                    return (
-                                        <div key={msg.id} className="message-call-log group-call-log">
-                                            <div className="call-log-content">
-                                                {msg.callType === 'video' ? <Video size={16} /> : <Phone size={16} />}
-                                                <span>{msg.content}</span>
-                                            </div>
-                                            <span className="call-log-time">{msg.time}</span>
+                    {/* Groups */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '500px', overflowY: 'auto' }}>
+                        {filteredGroups.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                <Users size={40} style={{ marginBottom: '0.5rem' }} />
+                                <p>Grup bulunamadı</p>
+                            </div>
+                        ) : (
+                            filteredGroups.map(group => (
+                                <motion.div
+                                    key={group.id}
+                                    whileHover={{ scale: 1.02, backgroundColor: 'var(--bg-hover)' }}
+                                    onClick={() => {
+                                        setSelectedGroup(group);
+                                        setGroups(prev => prev.map(g =>
+                                            g.id === group.id ? { ...g, unread: 0 } : g
+                                        ));
+                                    }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '12px',
+                                        borderRadius: 'var(--radius-md)',
+                                        cursor: 'pointer',
+                                        background: selectedGroup?.id === group.id ? 'var(--bg-hover)' : 'transparent',
+                                        border: selectedGroup?.id === group.id ? '1px solid var(--color-primary)' : '1px solid transparent'
+                                    }}
+                                >
+                                    <div>
+                                        <div style={{
+                                            width: '56px',
+                                            height: '56px',
+                                            borderRadius: 'var(--radius-md)',
+                                            background: 'linear-gradient(135deg, var(--color-success), var(--color-warning))',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'white',
+                                            fontWeight: 700,
+                                            fontSize: '1.25rem'
+                                        }}>
+                                            {group.avatar}
                                         </div>
-                                    );
-                                }
-                                return (
-                                    <div key={msg.id} className={`message-wrapper ${msg.isMe ? 'sent' : 'received'}`}>
-                                        {!msg.isMe && (
-                                            <div className="sender-avatar" style={{ background: `linear-gradient(135deg, ${selectedGroup.color}, ${selectedGroup.color}aa)` }}>
-                                                {msg.senderAvatar || msg.senderName?.charAt(0)}
-                                            </div>
-                                        )}
-                                        <div className="message-content">
-                                            {!msg.isMe && (
-                                                <span className="sender-name-tag" style={{ color: selectedGroup.color }}>{msg.senderName}</span>
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                            <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{group.name}</span>
+                                            {group.isAdmin && (
+                                                <Crown size={14} style={{ color: 'var(--color-warning)' }} />
                                             )}
-                                            <div className={`message-bubble-enhanced ${msg.isMe ? 'sent' : 'received'} ${msg.image || msg.sticker ? 'has-media' : ''}`}
-                                                style={msg.isMe && !msg.image && !msg.sticker ? { background: currentTheme.gradient } : {}}>
-                                                {msg.image && <img src={msg.image} alt="Fotoğraf" className="message-media" />}
-                                                {msg.sticker && <img src={msg.sticker} alt={msg.stickerName} className="message-sticker" />}
-                                                {msg.content && <p>{msg.content}</p>}
-                                                <span className="message-time-enhanced">{msg.time}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-
-                            {/* Typing Indicator */}
-                            {typingUsers.length > 0 && selectedGroup.id === 'g1' && (
-                                <div className="typing-indicator-enhanced">
-                                    <div className="typing-avatar" style={{ background: `linear-gradient(135deg, ${selectedGroup.color}, ${selectedGroup.color}aa)` }}>Z</div>
-                                    <div className="typing-bubble">
-                                        <span>{typingUsers.join(', ')} yazıyor</span>
-                                        <div className="typing-dots">
-                                            <div className="dot"></div>
-                                            <div className="dot"></div>
-                                            <div className="dot"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Emoji Picker */}
-                        {showEmojiPicker && (
-                            <div className="emoji-picker-enhanced">
-                                <div className="picker-header">
-                                    <button className={`picker-tab ${emojiTab === 'emoji' ? 'active' : ''}`} onClick={() => setEmojiTab('emoji')}>😀 Emoji</button>
-                                    <button className={`picker-tab ${emojiTab === 'sticker' ? 'active' : ''}`} onClick={() => setEmojiTab('sticker')}>🎭 Çıkartma</button>
-                                    <button className="picker-close" onClick={() => setShowEmojiPicker(false)}><X size={18} /></button>
-                                </div>
-                                {emojiTab === 'emoji' ? (
-                                    <>
-                                        <div className="emoji-categories-bar">
-                                            <button className={`cat-btn ${emojiCategory === 'favorites' ? 'active' : ''}`} onClick={() => setEmojiCategory('favorites')}>⭐</button>
-                                            {Object.entries(EMOJI_CATEGORIES).map(([key, cat]) => (
-                                                <button key={key} className={`cat-btn ${emojiCategory === key ? 'active' : ''}`} onClick={() => setEmojiCategory(key)}>{cat.icon}</button>
-                                            ))}
-                                        </div>
-                                        <div className="emojis-grid">
-                                            {emojiCategory === 'favorites' ? (
-                                                favoriteEmojis.map((emoji, i) => (
-                                                    <button key={i} className="emoji-item" onClick={() => addEmoji(emoji)}>{emoji}</button>
-                                                ))
-                                            ) : (
-                                                EMOJI_CATEGORIES[emojiCategory]?.emojis.map((emoji, i) => (
-                                                    <button key={i} className="emoji-item" onClick={() => addEmoji(emoji)}>{emoji}</button>
-                                                ))
+                                            {group.isPinned && (
+                                                <Star size={14} style={{ color: 'var(--color-accent)', fill: 'var(--color-accent)' }} />
                                             )}
                                         </div>
-                                    </>
-                                ) : (
-                                    <div className="stickers-grid">
-                                        {STICKERS.map(sticker => (
-                                            <button key={sticker.id} className="sticker-item" onClick={() => sendSticker(sticker)}>
-                                                <img src={sticker.url} alt={sticker.name} />
-                                                <span>{sticker.name}</span>
-                                            </button>
-                                        ))}
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                                            <Circle size={8} fill="#22c55e" color="#22c55e" style={{ display: 'inline', marginRight: '4px' }} />
+                                            {group.onlineCount}/{group.memberCount} üye çevrimiçi
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span style={{
+                                                fontSize: '0.875rem',
+                                                color: 'var(--text-muted)',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                <strong>{group.lastMessageSender}:</strong> {group.lastMessage}
+                                            </span>
+                                            {group.unread > 0 && (
+                                                <span style={{
+                                                    background: 'var(--color-primary)',
+                                                    color: 'white',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 700,
+                                                    minWidth: '20px',
+                                                    height: '20px',
+                                                    borderRadius: '10px',
+                                                    padding: '0 6px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}>
+                                                    {group.unread}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
+                                </motion.div>
+                            ))
                         )}
-
-                        {/* Input Area */}
-                        <form className="input-area-enhanced" onSubmit={handleSendMessage}>
-                            <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx" style={{ display: 'none' }} />
-                            <div className="input-actions">
-                                <button type="button" className="input-btn" onClick={() => fileInputRef.current?.click()}><Paperclip size={20} /></button>
-                            </div>
-                            <div className="input-wrapper">
-                                <input
-                                    type="text"
-                                    placeholder="Mesaj yaz..."
-                                    value={inputMessage}
-                                    onChange={(e) => setInputMessage(e.target.value)}
-                                />
-                            </div>
-                            <div className="input-actions">
-                                <button type="button" className={`input-btn ${showEmojiPicker ? 'active' : ''}`} onClick={() => setShowEmojiPicker(!showEmojiPicker)}><Smile size={20} /></button>
-                                <button type="submit" className="send-btn-enhanced" disabled={!inputMessage.trim()} style={{ background: currentTheme.gradient }}>
-                                    <Send size={20} />
-                                </button>
-                            </div>
-                        </form>
-                    </>
-                )}
-            </div>
-
-            {/* Settings Modal */}
-            {showSettings && (
-                <div className="modal-overlay-enhanced" onClick={() => setShowSettings(false)}>
-                    <div className="modal-enhanced settings-modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header-enhanced">
-                            <h2><Palette size={20} /> Görünüm Ayarları</h2>
-                            <button onClick={() => setShowSettings(false)}><X size={24} /></button>
-                        </div>
-                        <div className="modal-content">
-                            <div className="setting-group">
-                                <h3>Tema</h3>
-                                <div className="theme-buttons">
-                                    <button className={`theme-option ${!isDarkMode ? 'active' : ''}`} onClick={() => setIsDarkMode(false)}><Sun size={18} /> Gündüz</button>
-                                    <button className={`theme-option ${isDarkMode ? 'active' : ''}`} onClick={() => setIsDarkMode(true)}><Moon size={18} /> Gece</button>
-                                </div>
-                            </div>
-                            <div className="setting-group">
-                                <h3>Renk Teması</h3>
-                                <div className="colors-grid">
-                                    {COLOR_THEMES.map(theme => (
-                                        <button key={theme.id} className={`color-item ${selectedColorTheme === theme.id ? 'active' : ''}`} style={{ background: theme.gradient }} onClick={() => setSelectedColorTheme(theme.id)}>
-                                            {selectedColorTheme === theme.id && <Check size={16} />}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="setting-group">
-                                <h3>Duvar Kağıdı</h3>
-                                <div className="wallpapers-grid">
-                                    {WALLPAPERS.map(wp => (
-                                        <button key={wp.id} className={`wallpaper-item ${selectedWallpaper === wp.id ? 'active' : ''}`} style={wp.type === 'image' ? { backgroundImage: `url(${wp.value})`, backgroundSize: 'cover' } : { background: wp.value }} onClick={() => setSelectedWallpaper(wp.id)}>
-                                            <span>{wp.name}</span>
-                                            {selectedWallpaper === wp.id && <Check size={14} />}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
                     </div>
-                </div>
-            )}
+                </motion.div>
 
-            {/* Create Group Modal */}
-            {showCreateModal && (
-                <div className="modal-overlay-enhanced" onClick={() => setShowCreateModal(false)}>
-                    <div className="modal-enhanced" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header-enhanced">
-                            <h2><Plus size={20} /> Yeni Grup Oluştur</h2>
-                            <button onClick={() => setShowCreateModal(false)}><X size={24} /></button>
+                {/* Chat Window */}
+                <motion.div className="dashboard-card" variants={itemVariants} style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '600px' }}>
+                    {!selectedGroup ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+                            <Users size={80} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                            <h3 style={{ color: 'var(--text-main)', marginBottom: '0.5rem' }}>Grup Seçin</h3>
+                            <p>Mesajlaşmaya başlamak için bir grup seçin</p>
                         </div>
-                        <div className="modal-content">
-                            <div className="form-group">
-                                <label>Grup Adı</label>
-                                <input type="text" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} placeholder="Harika bir isim girin..." />
-                            </div>
-                            <div className="form-group">
-                                <label>Açıklama</label>
-                                <textarea value={newGroupDescription} onChange={e => setNewGroupDescription(e.target.value)} placeholder="Bu grup ne hakkında?" />
-                            </div>
-                            <div className="form-group">
-                                <label>Şifre (opsiyonel)</label>
-                                <input type="password" value={newGroupPassword} onChange={e => setNewGroupPassword(e.target.value)} placeholder="Gizli grup için şifre ekleyin" />
-                            </div>
-                            <button className="submit-btn-enhanced" style={{ background: currentTheme.gradient }} onClick={handleCreateGroup}>
-                                <Sparkles size={18} /> Grubu Oluştur
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Join Group Modal */}
-            {showJoinModal && (
-                <div className="modal-overlay-enhanced" onClick={() => setShowJoinModal(false)}>
-                    <div className="modal-enhanced" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header-enhanced">
-                            <h2><LogIn size={20} /> Gruba Katıl</h2>
-                            <button onClick={() => setShowJoinModal(false)}><X size={24} /></button>
-                        </div>
-                        <div className="modal-content">
-                            <div className="form-group">
-                                <label>Grup Adı veya Kodu</label>
-                                <input type="text" value={joinGroupName} onChange={e => setJoinGroupName(e.target.value)} placeholder="Grup adını veya davet kodunu girin" />
-                            </div>
-                            <div className="form-group">
-                                <label>Grup Şifresi</label>
-                                <input type="password" value={joinGroupPassword} onChange={e => setJoinGroupPassword(e.target.value)} placeholder="Gizli gruplar için şifre gerekli" />
-                            </div>
-                            <button className="submit-btn-enhanced" style={{ background: currentTheme.gradient }} onClick={handleJoinGroup}>
-                                <Users size={18} /> Gruba Katıl
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Members Modal */}
-            {showMembersModal && selectedGroup && (
-                <div className="modal-overlay-enhanced" onClick={() => setShowMembersModal(false)}>
-                    <div className="modal-enhanced members-modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header-enhanced">
-                            <h2><Users size={20} /> Grup Üyeleri</h2>
-                            <button onClick={() => setShowMembersModal(false)}><X size={24} /></button>
-                        </div>
-                        <div className="modal-content">
-                            <div className="members-search">
-                                <Search size={18} />
-                                <input type="text" placeholder="Üye ara..." />
-                            </div>
-                            <div className="members-list">
-                                {groupMembers.map(member => (
-                                    <div key={member.id} className="member-item">
-                                        <div className="member-avatar" style={{ background: `linear-gradient(135deg, ${selectedGroup.color}, ${selectedGroup.color}aa)` }}>
-                                            {member.avatar}
-                                            <div className={`status-dot ${member.online ? 'online' : ''}`}></div>
+                    ) : (
+                        <>
+                            {/* Group Header */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                paddingBottom: '1rem',
+                                borderBottom: '1px solid var(--border-color)',
+                                marginBottom: '1rem'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        borderRadius: 'var(--radius-md)',
+                                        background: 'linear-gradient(135deg, var(--color-success), var(--color-warning))',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontWeight: 700
+                                    }}>
+                                        {selectedGroup.avatar}
+                                    </div>
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                                            <h4 style={{ color: 'var(--text-main)' }}>{selectedGroup.name}</h4>
+                                            {selectedGroup.isAdmin && (
+                                                <Crown size={16} style={{ color: 'var(--color-warning)' }} />
+                                            )}
                                         </div>
-                                        <div className="member-info">
-                                            <div className="member-name">
-                                                {member.name}
-                                                {member.role === 'admin' && <span className="role-badge admin"><Crown size={10} /> Yönetici</span>}
-                                                {member.role === 'moderator' && <span className="role-badge mod"><Shield size={10} /> Moderatör</span>}
-                                            </div>
-                                            <div className="member-status">
-                                                {member.status || member.lastSeen}
+                                        <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                                            <Circle size={8} fill="#22c55e" color="#22c55e" style={{ display: 'inline', marginRight: '4px' }} />
+                                            {selectedGroup.onlineCount} üye çevrimiçi
+                                        </span>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button style={{
+                                        padding: '8px',
+                                        borderRadius: 'var(--radius-md)',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--bg-input)',
+                                        color: 'var(--text-main)',
+                                        cursor: 'pointer'
+                                    }} title="Üye Ekle">
+                                        <UserPlus size={20} />
+                                    </button>
+                                    {selectedGroup.isAdmin && (
+                                        <button style={{
+                                            padding: '8px',
+                                            borderRadius: 'var(--radius-md)',
+                                            border: '1px solid var(--border-color)',
+                                            background: 'var(--bg-input)',
+                                            color: 'var(--text-main)',
+                                            cursor: 'pointer'
+                                        }} title="Grup Ayarları">
+                                            <Settings size={20} />
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => {
+                                            setGroups(prev => prev.map(g =>
+                                                g.id === selectedGroup.id ? { ...g, isPinned: !g.isPinned } : g
+                                            ));
+                                            setSelectedGroup(prev => ({ ...prev, isPinned: !prev.isPinned }));
+                                        }}
+                                        style={{
+                                            padding: '8px',
+                                            borderRadius: 'var(--radius-md)',
+                                            border: '1px solid var(--border-color)',
+                                            background: 'var(--bg-input)',
+                                            color: selectedGroup.isPinned ? 'var(--color-accent)' : 'var(--text-main)',
+                                            cursor: 'pointer'
+                                        }}
+                                        title={selectedGroup.isPinned ? 'Sabitlemeyi Kaldır' : 'Sabitle'}
+                                    >
+                                        <Star size={20} fill={selectedGroup.isPinned ? 'var(--color-accent)' : 'none'} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Messages */}
+                            <div style={{
+                                flex: 1,
+                                overflowY: 'auto',
+                                padding: '1rem 0',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '12px'
+                            }}>
+                                {(messages[selectedGroup.id] || []).map(msg => (
+                                    <div
+                                        key={msg.id}
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: msg.isMe ? 'flex-end' : 'flex-start'
+                                        }}
+                                    >
+                                        <div style={{
+                                            maxWidth: '70%'
+                                        }}>
+                                            {!msg.isMe && (
+                                                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', marginBottom: '4px' }}>
+                                                    {msg.sender}
+                                                </div>
+                                            )}
+                                            <div style={{
+                                                padding: '12px 16px',
+                                                borderRadius: 'var(--radius-md)',
+                                                background: msg.isMe
+                                                    ? 'linear-gradient(135deg, var(--color-primary), var(--color-accent))'
+                                                    : 'var(--bg-input)',
+                                                color: msg.isMe ? 'white' : 'var(--text-main)'
+                                            }}>
+                                                <p style={{ marginBottom: '4px' }}>{msg.content}</p>
+                                                <span style={{
+                                                    fontSize: '0.75rem',
+                                                    opacity: 0.7
+                                                }}>
+                                                    {msg.time}
+                                                </span>
                                             </div>
                                         </div>
-                                        {selectedGroup.isAdmin && member.role !== 'admin' && (
-                                            <button className="member-action-btn"><MoreVertical size={18} /></button>
-                                        )}
                                     </div>
                                 ))}
+                                <div ref={messagesEndRef} />
                             </div>
-                            {selectedGroup.isAdmin && (
-                                <button className="add-member-btn" style={{ background: currentTheme.gradient }}>
-                                    <UserPlus size={18} /> Üye Ekle
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
 
-            {/* Call Modal */}
-            {showCallModal && (
-                <div className="call-modal-overlay">
-                    <div className="call-modal">
-                        <div className="call-header">
-                            <div className="call-status">
-                                {callStatus === 'calling' ? 'Aranıyor...' : callStatus === 'ended' ? 'Arama Sonlandı' : 'Bağlandı'}
-                            </div>
-                            {callStatus === 'connected' && (
-                                <div className="call-duration">{formatDuration(callDuration)}</div>
-                            )}
-                        </div>
-                        <div className="call-user-info">
-                            {callType === 'video' ? (
-                                <div className="call-video-container">
-                                    <video
-                                        ref={localVideoRef}
-                                        autoPlay
-                                        muted
-                                        playsInline
-                                        className="call-video"
-                                    />
-                                    <div className="call-overlay-name">{selectedGroup?.name}</div>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="call-avatar-wrapper">
-                                        <div className="call-avatar" style={{
-                                            background: selectedGroup?.color || currentTheme.gradient
-                                        }}>
-                                            {selectedGroup?.avatar}
-                                        </div>
-                                        <div className="call-avatar-pulse" style={{ borderColor: selectedGroup?.color || currentTheme.primary }}></div>
-                                    </div>
-                                    <h2>{selectedGroup?.name}</h2>
-                                </>
-                            )}
-                            <p>{callType === 'video' ? 'Görüntülü Grup Araması' : 'Sesli Grup Araması'}</p>
-                        </div>
-                        <div className="call-controls">
-                            <button className="control-btn" title="Mikrofon">
-                                <Mic size={24} />
-                            </button>
-                            {callType === 'video' && (
-                                <button className="control-btn" title="Kamera">
-                                    <Video size={24} />
+                            {/* Input */}
+                            <form onSubmit={handleSendMessage} style={{
+                                display: 'flex',
+                                gap: '8px',
+                                paddingTop: '1rem',
+                                borderTop: '1px solid var(--border-color)'
+                            }}>
+                                <button
+                                    type="button"
+                                    style={{
+                                        padding: '10px',
+                                        borderRadius: 'var(--radius-md)',
+                                        border: '1px solid var(--border-color)',
+                                        background: 'var(--bg-input)',
+                                        color: 'var(--text-main)',
+                                        cursor: 'pointer'
+                                    }}
+                                    title="Emoji"
+                                >
+                                    <Smile size={20} />
                                 </button>
-                            )}
-                            <button className="control-btn end-call" onClick={endCall} title="Sonlandır">
-                                <PhoneOff size={28} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+                                <input
+                                    type="text"
+                                    placeholder="Mesaj yazın..."
+                                    value={inputMessage}
+                                    onChange={(e) => setInputMessage(e.target.value)}
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px 16px',
+                                        background: 'var(--bg-input)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: 'var(--radius-md)',
+                                        color: 'var(--text-main)'
+                                    }}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!inputMessage.trim()}
+                                    style={{
+                                        padding: '10px 20px',
+                                        borderRadius: 'var(--radius-md)',
+                                        border: 'none',
+                                        background: inputMessage.trim()
+                                            ? 'linear-gradient(135deg, var(--color-primary), var(--color-accent))'
+                                            : 'var(--bg-input)',
+                                        color: 'white',
+                                        cursor: inputMessage.trim() ? 'pointer' : 'not-allowed',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    <Send size={18} />
+                                    Gönder
+                                </button>
+                            </form>
+                        </>
+                    )}
+                </motion.div>
+            </div>
+        </motion.div>
     );
 };
 
