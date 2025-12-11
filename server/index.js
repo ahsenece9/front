@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { createServer } from "http";
@@ -10,13 +9,32 @@ import { Server } from "socket.io";
 dotenv.config();
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, { 
-  cors: { 
+const io = new Server(httpServer, {
+  cors: {
     origin: ["https://uniplan-frontend.onrender.com", "http://localhost:3000"],
-    credentials: true 
-  } 
+    credentials: true
+  }
 });
-const prisma = new PrismaClient();
+
+// Prisma'yı sadece production'da kullan
+let prisma = null;
+let PrismaClient = null;
+
+if (process.env.NODE_ENV === 'production') {
+  try {
+    const prismaModule = await import("@prisma/client");
+    PrismaClient = prismaModule.PrismaClient;
+    prisma = new PrismaClient();
+    console.log('✅ Prisma initialized for production');
+  } catch (err) {
+    console.error('❌ Prisma initialization failed:', err.message);
+  }
+} else {
+  console.log('🔓 Development mode: Running without database');
+}
+
+// In-memory storage for dev mode
+let devMessages = [];
 
 // CORS
 app.use(cors({
@@ -45,6 +63,11 @@ const authenticateToken = async (req, res, next) => {
       return next();
     }
 
+    // Production mode: database kontrolü gerekli
+    if (!prisma) {
+      return res.status(503).json({ error: 'Database not available in dev mode. Use demo credentials.' });
+    }
+
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user) return res.status(401).json({ error: 'User not found' });
 
@@ -68,20 +91,27 @@ app.post("/api/auth/register", async (req, res) => {
         return res.status(400).json({ error: "Email and password required" });
     }
 
+    // Development mode: database yok
+    if (!prisma) {
+        return res.status(503).json({
+            error: "Registration not available in dev mode. Use demo credentials: demo@test.com / demo123"
+        });
+    }
+
     const hashed = await bcrypt.hash(password, 10);
 
     try {
         const user = await prisma.user.create({
-            data: { 
-                email, 
+            data: {
+                email,
                 password: hashed,
                 name: name || full_name || email.split('@')[0]
             }
         });
-        
+
         const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
-        
-        res.json({ 
+
+        res.json({
             message: "Registered successfully",
             token,
             user: {
@@ -125,6 +155,13 @@ app.post("/api/auth/login", async (req, res) => {
         });
     }
 
+    // Development mode: database yok, sadece demo credentials
+    if (!prisma) {
+        return res.status(400).json({
+            error: "Invalid credentials. In dev mode, use: demo@test.com / demo123"
+        });
+    }
+
     try {
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return res.status(400).json({ error: "Invalid credentials" });
@@ -161,6 +198,11 @@ app.get("/api/auth/me", authenticateToken, async (req, res) => {
 
 /* ---------- GET MESSAGES ---------- */
 app.get("/api/messages", authenticateToken, async (req, res) => {
+    // Development mode: in-memory messages kullan
+    if (!prisma) {
+        return res.json(devMessages);
+    }
+
     try {
         const messages = await prisma.message.findMany({
             orderBy: { createdAt: 'asc' },
@@ -200,31 +242,47 @@ io.on("connection", (socket) => {
         try {
             console.log("📨 Message received:", data);
 
-            const message = await prisma.message.create({
-                data: { 
-                    text: data.content,
-                    userId: data.sender_id
-                },
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            email: true
+            let formatted;
+
+            if (!prisma) {
+                // Development mode: in-memory storage
+                const message = {
+                    id: Date.now().toString(),
+                    content: data.content,
+                    sender_id: data.sender_id,
+                    sender_name: data.sender_name || 'Demo Kullanıcı',
+                    created_at: new Date().toISOString()
+                };
+                devMessages.push(message);
+                formatted = message;
+            } else {
+                // Production mode: database storage
+                const message = await prisma.message.create({
+                    data: {
+                        text: data.content,
+                        userId: data.sender_id
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true
+                            }
                         }
                     }
-                }
-            });
+                });
+
+                formatted = {
+                    id: message.id,
+                    content: message.text,
+                    sender_id: message.userId,
+                    sender_name: message.user.name || message.user.email,
+                    created_at: message.createdAt
+                };
+            }
 
             // Tüm kullanıcılara gönder (broadcast)
-            const formatted = {
-                id: message.id,
-                content: message.text,
-                sender_id: message.userId,
-                sender_name: message.user.name || message.user.email,
-                created_at: message.createdAt
-            };
-
             io.emit("receive_message", formatted);
             console.log("✅ Message broadcasted:", formatted);
         } catch (err) {
