@@ -16,11 +16,20 @@ const io = new Server(httpServer, {
   }
 });
 
-// Prisma'yı sadece production'da kullan
+// Prisma'yı sadece production'da veya DATABASE_URL varsa kullan
 let prisma = null;
 let PrismaClient = null;
 
-if (process.env.NODE_ENV === 'production') {
+// NODE_ENV kontrolü - production veya undefined değilse dev mode
+const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+
+console.log('🔍 Environment check:', {
+  NODE_ENV: process.env.NODE_ENV,
+  isDevelopment,
+  hasDatabase: !!process.env.DATABASE_URL
+});
+
+if (!isDevelopment && process.env.DATABASE_URL) {
   try {
     const prismaModule = await import("@prisma/client");
     PrismaClient = prismaModule.PrismaClient;
@@ -53,8 +62,8 @@ const authenticateToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'demo-secret');
 
-    // 🔓 DEVELOPMENT MODE: Demo kullanıcı bypass
-    if (process.env.NODE_ENV !== 'production' && decoded.id === 'demo-user-id-12345') {
+    // 🔓 Demo kullanıcı bypass (NODE_ENV'den bağımsız)
+    if (decoded.id === 'demo-user-id-12345') {
       req.user = {
         id: 'demo-user-id-12345',
         email: 'demo@test.com',
@@ -63,9 +72,9 @@ const authenticateToken = async (req, res, next) => {
       return next();
     }
 
-    // Production mode: database kontrolü gerekli
+    // Database kontrolü - gerçek kullanıcılar için
     if (!prisma) {
-      return res.status(503).json({ error: 'Database not available in dev mode. Use demo credentials.' });
+      return res.status(503).json({ error: 'Database not available. Use demo@test.com / demo123' });
     }
 
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
@@ -135,8 +144,8 @@ app.post("/api/auth/login", async (req, res) => {
         return res.status(400).json({ error: "Email and password required" });
     }
 
-    // 🔓 DEVELOPMENT MODE: Test kullanıcısı için bypass
-    if (process.env.NODE_ENV !== 'production' && email === 'demo@test.com' && password === 'demo123') {
+    // 🔓 DEVELOPMENT MODE: Demo kullanıcı ile bypass (Prisma olmadan)
+    if (email === 'demo@test.com' && password === 'demo123') {
         console.log('🔓 Dev mode: Using demo credentials');
         const demoUser = {
             id: 'demo-user-id-12345',
@@ -155,10 +164,10 @@ app.post("/api/auth/login", async (req, res) => {
         });
     }
 
-    // Development mode: database yok, sadece demo credentials
+    // Database kontrolü - demo olmayan kullanıcılar için
     if (!prisma) {
         return res.status(400).json({
-            error: "Invalid credentials. In dev mode, use: demo@test.com / demo123"
+            error: "Invalid credentials. Database not available. Use demo@test.com / demo123"
         });
     }
 
