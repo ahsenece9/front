@@ -12,7 +12,7 @@ const monthThemes = {
     4: { name: 'Mayıs', theme: 'may', icon: '🌺', colors: { bg: '#d81b60', day: '#ffffff', weekend: '#f06292', text: '#ffffff' } },
     5: { name: 'Haziran', theme: 'june', icon: '☀️', colors: { bg: '#1976d2', day: '#ffffff', weekend: '#64b5f6', text: '#ffffff' } },
     6: { name: 'Temmuz', theme: 'july', icon: '🏖️', colors: { bg: '#f57c00', day: '#ffffff', weekend: '#ffb74d', text: '#ffffff' } },
-    7: { name: 'Ağustos', theme: 'august', icon: '🌻', colors: { bg: '#fbc02d', day: '#111827', weekend: '#ff8f00', text: '#111827' } },
+    7: { name: 'Ağustos', theme: 'august', icon: '🌻', colors: { bg: '#fbc02d', day: '#ffffff', weekend: '#ff8f00', text: '#ffffff' } },
     8: { name: 'Eylül', theme: 'september', icon: '🍂', colors: { bg: '#8e24aa', day: '#ffffff', weekend: '#ba68c8', text: '#ffffff' } },
     9: { name: 'Ekim', theme: 'october', icon: '🎃', colors: { bg: '#d84315', day: '#ffffff', weekend: '#ff8a65', text: '#ffffff' } },
     10:{ name: 'Kasım', theme: 'november', icon: '🍁', colors: { bg: '#6d4c41', day: '#ffffff', weekend: '#a1887f', text: '#ffffff' } },

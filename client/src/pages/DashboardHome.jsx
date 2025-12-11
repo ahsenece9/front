@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
     CheckCircle,
@@ -13,9 +13,64 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // ✅ Eklendi
 
+// 🎯 Motivasyon sözleri havuzu
+const motivationalQuotes = [
+    {
+        text: "Başarı, her gün tekrarlanan küçük çabaların toplamıdır.",
+        author: "Robert Collier"
+    },
+    {
+        text: "Yarının yapabileceklerini bugüne bırakma, çünkü yarın hiç gelmeyebilir.",
+        author: "Bruce Lee"
+    },
+    {
+        text: "Başarısızlık başarının anahtarıdır; her hata bize bir şey öğretir.",
+        author: "Morihei Ueshiba"
+    },
+    {
+        text: "Yapabileceğine inandığın ya da inanamadığın - her iki durumda da haklısın.",
+        author: "Henry Ford"
+    },
+    {
+        text: "Hayal kurmayan, hayallerini gerçekleştiremez.",
+        author: "Mustafa Kemal Atatürk"
+    },
+    {
+        text: "Hayatta en hakiki mürşit ilimdir.",
+        author: "Mustafa Kemal Atatürk"
+    },
+    {
+        text: "Başarı son değil, başarısızlık ölümcül değil: Devam etme cesareti önemli olandır.",
+        author: "Winston Churchill"
+    },
+    {
+        text: "Eğitim geleceğin açılacağı pasaporttur, yarın kendini bugün hazırlayanlarındır.",
+        author: "Malcolm X"
+    },
+    {
+        text: "Bir insanın başarısının sırrı, amacını bulması ve tüm enerjisini ona vermesidir.",
+        author: "Benjamin Franklin"
+    },
+    {
+        text: "Hedeflerinize ulaşmanın en iyi yolu, onları gerçekleştirmek için harekete geçmektir.",
+        author: "Pablo Picasso"
+    }
+];
+
 const DashboardHome = () => {
     const navigate = useNavigate();
     const { user } = useAuth(); // ✅ Kullanıcı bilgisini al
+
+    // 🎲 Her gün rastgele farklı bir söz seçmek için
+    const [dailyQuote, setDailyQuote] = useState(motivationalQuotes[0]);
+
+    useEffect(() => {
+        // Bugünün tarihini kullanarak seed oluştur (her gün aynı söz)
+        const today = new Date();
+        const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+        const quoteIndex = dayOfYear % motivationalQuotes.length;
+        setDailyQuote(motivationalQuotes[quoteIndex]);
+    }, []);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -154,9 +209,9 @@ const DashboardHome = () => {
                         <h3>Günün Sözü</h3>
                     </div>
                     <blockquote className="quote-text">
-                        "Başarı, her gün tekrarlanan küçük çabaların toplamıdır."
+                        "{dailyQuote.text}"
                     </blockquote>
-                    <div className="quote-author">- Robert Collier</div>
+                    <div className="quote-author">- {dailyQuote.author}</div>
 
                     <div className="focus-tip">
                         <strong>İpucu:</strong> En zor görevini günün ilk saatlerinde tamamlamayı dene.

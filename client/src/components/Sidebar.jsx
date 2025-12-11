@@ -19,7 +19,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
     const navItems = [
         { icon: LayoutDashboard, label: 'Ana Sayfa', path: '/dashboard' },
         { icon: Calendar, label: 'Takvim', path: '/dashboard/calendar' },
-        { icon: CheckSquare, label: 'To-Do List', path: '/dashboard/todo' },
+        { icon: CheckSquare, label: 'Görevler', path: '/dashboard/todo' },
         { icon: Timer, label: 'Pomodoro', path: '/dashboard/pomodoro' },
         { icon: MessageSquare, label: 'Sohbetler', path: '/dashboard/chat' },
         { icon: Users, label: 'Gruplar', path: '/dashboard/groups' },

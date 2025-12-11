@@ -8,6 +8,7 @@ import '../styles/Avatar3D.css';
 
 const Topbar = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [avatarUrl, setAvatarUrl] = useState(null);
     const navigate = useNavigate();
     const { user, signOut } = useAuth();
@@ -52,13 +53,58 @@ const Topbar = () => {
             <div className="search-bar" style={{ opacity: 0 }}></div>
 
             <div className="topbar-actions">
-                <div className="icon-btn">
+                <div
+                    className="icon-btn"
+                    onClick={() => navigate('/dashboard/chat')}
+                    title="Mesajlar"
+                    style={{ cursor: 'pointer' }}
+                >
                     <MessageCircle size={20} />
                     <div className="badge">3</div>
                 </div>
-                <div className="icon-btn">
-                    <Bell size={20} />
-                    <div className="badge">5</div>
+
+                <div style={{ position: 'relative' }}>
+                    <div
+                        className="icon-btn"
+                        onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                        title="Bildirimler"
+                        style={{ cursor: 'pointer' }}
+                    >
+                        <Bell size={20} />
+                        <div className="badge">5</div>
+                    </div>
+
+                    <AnimatePresence>
+                        {isNotificationsOpen && (
+                            <motion.div
+                                className="user-dropdown"
+                                style={{ minWidth: '300px' }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)' }}>
+                                    <strong>Bildirimler</strong>
+                                </div>
+                                <div className="dropdown-item" onClick={() => { setIsNotificationsOpen(false); }}>
+                                    <Bell size={16} /> Yeni görev: "Proje raporu"
+                                </div>
+                                <div className="dropdown-item" onClick={() => { setIsNotificationsOpen(false); }}>
+                                    <Bell size={16} /> Pomodoro tamamlandı!
+                                </div>
+                                <div className="dropdown-item" onClick={() => { setIsNotificationsOpen(false); }}>
+                                    <Bell size={16} /> Yarın için 3 etkinlik
+                                </div>
+                                <div className="dropdown-item" onClick={() => { setIsNotificationsOpen(false); }}>
+                                    <Bell size={16} /> Grup davetiyesi alındı
+                                </div>
+                                <div className="dropdown-item" onClick={() => { setIsNotificationsOpen(false); }}>
+                                    <Bell size={16} /> Haftalık özet hazır
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 <div className="user-profile-container" style={{ position: 'relative' }}>
