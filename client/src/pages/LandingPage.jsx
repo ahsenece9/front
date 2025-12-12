@@ -222,6 +222,174 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Showcase Section - Takvim */}
+            <section className="showcase-section">
+                <motion.div
+                    className="showcase-container"
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                    <div className="showcase-content">
+                        <div className="showcase-label">
+                            <Calendar size={16} />
+                            <span>Akıllı Takvim</span>
+                        </div>
+                        <h2 className="showcase-title">
+                            Planlarınızı Renklendir
+                        </h2>
+                        <p className="showcase-description">
+                            Tüm etkinliklerinizi tek bir yerde görüntüleyin. Emoji desteği, detaylı notlar ve
+                            özelleştirilebilir renkler ile takvim deneyiminizi kişiselleştirin.
+                        </p>
+                        <div className="showcase-features">
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Aylık takvim görünümü ile planlarınıza genel bakış</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Her ay için farklı emoji ve renk temaları</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Detaylı not ve etkinlik ekleme</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="showcase-image">
+                        <img src="/screenshots/calendar.png" alt="Takvim Sayfası" />
+                    </div>
+                </motion.div>
+            </section>
+
+            {/* Showcase Section - Görevler */}
+            <section className="showcase-section">
+                <motion.div
+                    className="showcase-container reverse"
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                    <div className="showcase-content">
+                        <div className="showcase-label">
+                            <CheckCircle size={16} />
+                            <span>Görev Yönetimi</span>
+                        </div>
+                        <h2 className="showcase-title">
+                            Görevlerinizi Organize Edin
+                        </h2>
+                        <p className="showcase-description">
+                            Yaklaşan, önemli ve diğer görevlerinizi kategorilere ayırın.
+                            İlerlemenizi takip edin ve verimliliğinizi artırın.
+                        </p>
+                        <div className="showcase-features">
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Görev kategorileri: Yaklaşan, Önemli, Diğer</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>İlerleme takibi ve tamamlanma yüzdesi</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Çalışma, Özel, Günler ve Sosyal kategorileri</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="showcase-image">
+                        <img src="/screenshots/tasks.png" alt="Görevler Sayfası" />
+                    </div>
+                </motion.div>
+            </section>
+
+            {/* Showcase Section - Pomodoro */}
+            <section className="showcase-section">
+                <motion.div
+                    className="showcase-container"
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                    <div className="showcase-content">
+                        <div className="showcase-label">
+                            <Clock size={16} />
+                            <span>Pomodoro Timer</span>
+                        </div>
+                        <h2 className="showcase-title">
+                            Odaklanmanın Gücünü Keşfedin
+                        </h2>
+                        <p className="showcase-description">
+                            Pomodoro tekniği ile çalışma sürenizi optimize edin.
+                            25 dakikalık odaklanma seansları, kısa ve uzun molalarla verimliliğinizi maksimuma çıkarın.
+                        </p>
+                        <div className="showcase-features">
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>25 dakika çalışma, 5 dakika mola sistemi</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Tamamlanan ve toplam oda ilerleme takibi</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Özelleştirilebilir arka plan desenleri ve renkler</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="showcase-image">
+                        <img src="/screenshots/pomodoro.png" alt="Pomodoro Sayfası" />
+                    </div>
+                </motion.div>
+            </section>
+
+            {/* Showcase Section - Sohbetler */}
+            <section className="showcase-section">
+                <motion.div
+                    className="showcase-container reverse"
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                    <div className="showcase-content">
+                        <div className="showcase-label">
+                            <MessageSquare size={16} />
+                            <span>Anlık Mesajlaşma</span>
+                        </div>
+                        <h2 className="showcase-title">
+                            Arkadaşlarınızla Bağlantıda Kalın
+                        </h2>
+                        <p className="showcase-description">
+                            Gerçek zamanlı mesajlaşma ile arkadaşlarınızla iletişimde kalın.
+                            Çevrimiçi durumları görün ve anında sohbet edin.
+                        </p>
+                        <div className="showcase-features">
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Gerçek zamanlı mesajlaşma sistemi</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Çevrimiçi/çevrimdışı durum göstergesi</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Favori arkadaşlarınızı işaretleyin</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="showcase-image">
+                        <img src="/screenshots/chat.png" alt="Sohbetler Sayfası" />
+                    </div>
+                </motion.div>
+            </section>
+
             {/* Testimonials Section */}
             <section className="testimonials-section">
                 <div className="testimonials-container">
