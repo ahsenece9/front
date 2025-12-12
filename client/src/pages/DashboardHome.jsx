@@ -155,7 +155,7 @@ const DashboardHome = () => {
                             </div>
                         </div>
                         <div>
-                            <div style={{ fontSize: '2rem', fontWeight: 700' }}>{todayStats.growth}%</div>
+                            <div style={{ fontSize: '2rem', fontWeight: 700 }}>{todayStats.growth}%</div>
                             <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Büyüme Oranı</div>
                             <div style={{
                                 width: '60px',
