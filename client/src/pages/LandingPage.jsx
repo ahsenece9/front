@@ -390,6 +390,48 @@ const LandingPage = () => {
                 </motion.div>
             </section>
 
+            {/* Showcase Section - Gruplar */}
+            <section className="showcase-section">
+                <motion.div
+                    className="showcase-container"
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                    <div className="showcase-content">
+                        <div className="showcase-label">
+                            <Users size={16} />
+                            <span>Grup Yönetimi</span>
+                        </div>
+                        <h2 className="showcase-title">
+                            Takımınızla Birlikte Çalışın
+                        </h2>
+                        <p className="showcase-description">
+                            Grup sohbetleri oluşturun, yönetin ve takım arkadaşlarınızla işbirliği yapın.
+                            Proje grupları, sosyal gruplar ve daha fazlası için ideal.
+                        </p>
+                        <div className="showcase-features">
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Tümü, Sabitlenmiş ve Yönetici filtre seçenekleri</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Grup üye sayısı ve son aktivite takibi</span>
+                            </div>
+                            <div className="showcase-feature-item">
+                                <CheckCircle size={20} />
+                                <span>Admin rozetleri ve grup arama özelliği</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="showcase-image">
+                        <img src="/screenshots/groups.png" alt="Gruplar Sayfası" />
+                    </div>
+                </motion.div>
+            </section>
+
             {/* Testimonials Section */}
             <section className="testimonials-section">
                 <div className="testimonials-container">
